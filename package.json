@@ -1,0 +1,29 @@
+{
+  "name": "financas-pessoais",
+  "version": "1.0.0",
+  "description": "Sistema de Gestão de Finanças Pessoais",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "build": "echo 'Build completed - static files ready'",
+    "start": "python -m http.server 8000"
+  },
+  "keywords": [
+    "finanças",
+    "pessoais",
+    "gestão",
+    "orçamento",
+    "controle",
+    "financeiro"
+  ],
+  "author": "Sistema de Finanças Pessoais",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seu-usuario/financas-pessoais.git"
+  },
+  "homepage": "https://seu-projeto.vercel.app",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

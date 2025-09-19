@@ -1,0 +1,67 @@
+========================================
+    FINANÇAS PESSOAIS - INSTRUÇÕES
+========================================
+
+🌐 HOSPEDADO NA VERCEL: https://seu-projeto.vercel.app
+
+========================================
+💻 DESENVOLVIMENTO LOCAL:
+========================================
+
+✅ FORMA CORRETA DE USAR:
+1. Execute o arquivo: iniciar_servidor.bat
+2. Acesse: http://localhost:8000/
+
+❌ NÃO FUNCIONA:
+- Duplo-clique no arquivo index.html
+- Abrir diretamente no navegador
+
+========================================
+🚀 DEPLOY NA VERCEL:
+========================================
+
+1. Instale a Vercel CLI: npm i -g vercel
+2. No terminal, execute: vercel
+3. Siga as instruções para fazer deploy
+4. Sua aplicação estará online!
+
+Ou conecte seu repositório GitHub à Vercel para deploy automático.
+
+========================================
+POR QUE PRECISA DO SERVIDOR?
+========================================
+
+O arquivo HTML usa recursos que só funcionam via servidor HTTP:
+- LocalStorage para salvar dados
+- Funcionalidades JavaScript avançadas
+- Importação/exportação de arquivos
+
+========================================
+REQUISITOS LOCAIS:
+========================================
+
+- Python instalado no sistema
+- Navegador moderno (Chrome, Firefox, Edge)
+
+========================================
+ARQUIVOS PARA VERCEL:
+========================================
+
+- index.html (arquivo principal)
+- vercel.json (configurações de deploy)
+- package.json (informações do projeto)
+
+========================================
+PROBLEMAS COMUNS:
+========================================
+
+1. "Python não encontrado"
+   → Instale Python do site oficial
+
+2. "Porta 8000 em uso"
+   → Feche outros servidores ou mude a porta
+
+3. "Página não carrega"
+   → Verifique se o servidor está rodando
+
+========================================
