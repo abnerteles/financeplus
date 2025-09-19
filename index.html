@@ -7,6 +7,12 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Finanças Pessoais | Fluxo de Caixa</title>
+    
+    <!-- Recursos locais como fallback -->
+    <link href="assets/css/bootstrap-minimal.css" rel="stylesheet">
+    <script src="assets/js/bootstrap-modal.js"></script>
+    
+    <!-- CDNs externos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -4310,6 +4316,9 @@
         }
         
         function atualizarInterfaceUsuarioLogado() {
+            // Remover classe que esconde o conteúdo principal
+            document.body.classList.remove('login-active');
+            
             // Atualizar nome do usuário na navbar
             const navbarBrand = document.querySelector('.navbar-brand');
             navbarBrand.innerHTML = `<i class="bi bi-cash-coin me-2"></i>Finanças de ${usuarioAtual.nome.split(' ')[0]}`;
