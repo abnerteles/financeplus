@@ -4104,70 +4104,122 @@
         }
         
         // Funções de autenticação
-        function verificarAutenticacao() {
-            // Carregar usuários cadastrados
-            const usuariosSalvos = localStorage.getItem('financasUsuarios');
-            if (usuariosSalvos) {
-                usuarios = JSON.parse(usuariosSalvos);
-            }
-            
+        async function verificarAutenticacao() {
             // Verificar se há usuário logado
             const usuarioLogado = localStorage.getItem('financasUsuarioLogado') || sessionStorage.getItem('financasUsuarioLogado');
-            if (usuarioLogado) {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            
+            if (usuarioLogado && token) {
                 try {
                     usuarioAtual = JSON.parse(usuarioLogado);
-                    // Definir se a sessão é temporária baseada no tipo de storage
-                    sessaoTemporaria = !localStorage.getItem('financasUsuarioLogado');
-                    atualizarInterfaceUsuarioLogado();
-                    carregarDadosSalvos();
-                    carregarFotoPerfil();
-                    return;
+                    
+                    // Verificar se o token ainda é válido
+                    const response = await fetch('/api/auth/verify', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        // Token válido, usuário autenticado
+                        sessaoTemporaria = !localStorage.getItem('financasUsuarioLogado');
+                        atualizarInterfaceUsuarioLogado();
+                        carregarDadosSalvos();
+                        carregarFotoPerfil();
+                        return;
+                    } else {
+                        // Token inválido, limpar dados
+                        throw new Error('Token inválido');
+                    }
                 } catch (e) {
-                    console.error('Erro ao carregar usuário:', e);
+                    console.error('Erro ao verificar autenticação:', e);
                     localStorage.removeItem('financasUsuarioLogado');
                     sessionStorage.removeItem('financasUsuarioLogado');
+                    localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('authToken');
+                    usuarioAtual = null;
                 }
             }
             
-            // Se não há usuário logado, mostrar modal de login
+            // Se não há usuário logado ou token inválido, mostrar modal de login
             const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
             loginModal.show();
         }
         
-        function fazerLogin(e) {
+        async function fazerLogin(e) {
             if (e) e.preventDefault();
             
             const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value;
             const lembrar = document.getElementById('lembrar-login').checked;
             
-            // Validar credenciais
-            const usuario = usuarios.find(u => u.email === email && u.senha === senha);
+            // Mostrar loading
+            const loginBtn = document.querySelector('#login-form button[type="submit"]');
+            const originalText = loginBtn.textContent;
+            loginBtn.textContent = 'Entrando...';
+            loginBtn.disabled = true;
             
-            if (usuario) {
-                // Login bem-sucedido
-                usuarioAtual = { nome: usuario.nome, email: usuario.email };
+            try {
+                // Fazer login via API
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: senha
+                    })
+                });
                 
-                if (lembrar) {
-                    localStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
-                    sessaoTemporaria = false; // Sessão permanente
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Login bem-sucedido
+                    usuarioAtual = { 
+                        nome: data.user.name, 
+                        email: data.user.email,
+                        role: data.user.role,
+                        token: data.token
+                    };
+                    
+                    if (lembrar) {
+                        localStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
+                        localStorage.setItem('authToken', data.token);
+                        sessaoTemporaria = false; // Sessão permanente
+                    } else {
+                        sessionStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
+                        sessionStorage.setItem('authToken', data.token);
+                        sessaoTemporaria = true; // Sessão temporária
+                    }
+                    
+                    // Fechar modal e atualizar interface
+                    bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+                    atualizarInterfaceUsuarioLogado();
+                    carregarDadosSalvos();
+                    carregarFotoPerfil();
+                    aplicarFiltros();
                 } else {
-                    sessionStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
-                    sessaoTemporaria = true; // Sessão temporária
+                    // Login falhou
+                    document.getElementById('login-error').textContent = data.message || 'Email ou senha incorretos';
+                    document.getElementById('login-error').classList.remove('d-none');
+                    setTimeout(() => {
+                        document.getElementById('login-error').classList.add('d-none');
+                    }, 5000);
                 }
-                
-                // Fechar modal e atualizar interface
-                bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
-                atualizarInterfaceUsuarioLogado();
-                carregarDadosSalvos();
-                carregarFotoPerfil();
-                aplicarFiltros();
-            } else {
-                // Login falhou
+            } catch (error) {
+                console.error('Erro no login:', error);
+                document.getElementById('login-error').textContent = 'Erro de conexão. Tente novamente.';
                 document.getElementById('login-error').classList.remove('d-none');
                 setTimeout(() => {
                     document.getElementById('login-error').classList.add('d-none');
-                }, 3000);
+                }, 5000);
+            } finally {
+                // Restaurar botão
+                loginBtn.textContent = originalText;
+                loginBtn.disabled = false;
             }
         }
         
@@ -4244,6 +4296,8 @@
             // Limpar dados de sessão
             localStorage.removeItem('financasUsuarioLogado');
             sessionStorage.removeItem('financasUsuarioLogado');
+            localStorage.removeItem('authToken');
+            sessionStorage.removeItem('authToken');
             usuarioAtual = null;
             
             // Limpar dados em memória

@@ -73,7 +73,7 @@ router.post('/register', registerValidation, async (req, res) => {
     const { name, email, password } = req.body;
 
     // Verificar se usuário já existe
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findByEmail(email);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -152,7 +152,7 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
     const { email, password } = req.body;
 
     // Buscar usuário
-    const user = await User.findOne({ email }).populate('subscription');
+    const user = await User.findByEmail(email);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -160,43 +160,20 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
       });
     }
 
-    // Verificar se conta está bloqueada
-    if (user.isLocked) {
-      return res.status(423).json({
-        success: false,
-        message: 'Conta temporariamente bloqueada devido a múltiplas tentativas de login'
-      });
-    }
-
     // Verificar senha
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      await user.incLoginAttempts();
       return res.status(401).json({
         success: false,
         message: 'Credenciais inválidas'
       });
     }
 
-    // Verificar se conta está ativa
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Conta desativada'
-      });
-    }
-
-    // Reset tentativas de login e atualizar último login
-    await user.resetLoginAttempts();
-    user.lastLogin = new Date();
-    await user.save();
-
     // Gerar token
-    const token = generateToken(user._id);
+    const token = generateToken(user.id);
 
     // Remover senha da resposta
-    const userResponse = user.toObject();
-    delete userResponse.password;
+    const userResponse = user.toJSON();
 
     res.json({
       success: true,
@@ -231,6 +208,30 @@ router.get('/me', authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao buscar usuário:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  }
+});
+
+// @route   GET /api/auth/verify
+// @desc    Verificar se o token é válido
+// @access  Private
+router.get('/verify', authenticate, async (req, res) => {
+  try {
+    // Se chegou até aqui, o token é válido (middleware authenticate passou)
+    res.json({
+      success: true,
+      message: 'Token válido',
+      data: {
+        userId: req.user._id,
+        email: req.user.email,
+        role: req.user.role
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao verificar token:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
@@ -295,7 +296,7 @@ router.post('/forgot-password', [
     }
 
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findByEmail(email);
 
     // Sempre retorna sucesso por segurança (não revela se email existe)
     res.json({
@@ -361,13 +362,9 @@ router.post('/reset-password', [
       });
     }
 
-    const user = await User.findOne({
-      _id: decoded.userId,
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() }
-    });
+    const user = await User.findById(decoded.userId);
 
-    if (!user) {
+    if (!user || user.passwordResetToken !== token || user.passwordResetExpires < Date.now()) {
       return res.status(400).json({
         success: false,
         message: 'Token inválido ou expirado'
