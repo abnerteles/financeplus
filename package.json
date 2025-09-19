@@ -1,12 +1,14 @@
 {
   "name": "financeplus",
   "version": "1.0.0",
-  "description": "FinancePlus - Sistema Inteligente de Gestão de Finanças Pessoais",
-  "main": "index.html",
+  "description": "FinancePlus - Sistema Inteligente de Gestão de Finanças Pessoais SaaS",
+  "main": "server.js",
   "scripts": {
-    "dev": "python -m http.server 8000",
-    "build": "echo 'Build completed - static files ready'",
-    "start": "python -m http.server 8000"
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "build": "echo 'Build completed - SaaS ready'",
+    "migrate": "node scripts/migrate.js",
+    "seed": "node scripts/seed.js"
   },
   "keywords": [
     "finanças",
@@ -14,16 +16,35 @@
     "gestão",
     "orçamento",
     "controle",
-    "financeiro"
+    "financeiro",
+    "saas",
+    "subscription"
   ],
-  "author": "Sistema de Finanças Pessoais",
+  "author": "FinancePlus SaaS",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/seu-usuario/financas-pessoais.git"
+    "url": "https://github.com/abnerteles/financeplus.git"
   },
-  "homepage": "https://seu-projeto.vercel.app",
+  "homepage": "https://financeplus.vercel.app",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@vercel/postgres": "^0.10.0",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.9.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }
