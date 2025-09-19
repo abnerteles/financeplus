@@ -1,7 +1,7 @@
 {
-  "name": "financas-pessoais",
+  "name": "financeplus",
   "version": "1.0.0",
-  "description": "Sistema de Gestão de Finanças Pessoais",
+  "description": "FinancePlus - Sistema Inteligente de Gestão de Finanças Pessoais",
   "main": "index.html",
   "scripts": {
     "dev": "python -m http.server 8000",
