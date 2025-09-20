@@ -1,0 +1,35 @@
+{
+  "name": "web-financial",
+  "version": "1.0.0",
+  "description": "Sistema de Finanças Pessoais - Controle de Fluxo de Caixa",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Build completed - Static files ready'",
+    "start": "npx serve .",
+    "preview": "npx serve ."
+  },
+  "keywords": [
+    "finanças",
+    "pessoais",
+    "fluxo",
+    "caixa",
+    "controle",
+    "financeiro",
+    "orçamento",
+    "investimentos"
+  ],
+  "author": "Sistema Financeiro",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usuario/web-financial.git"
+  },
+  "homepage": "https://web-financial.vercel.app"
+}

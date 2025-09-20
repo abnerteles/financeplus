@@ -13,6 +13,109 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- Proteção contra DevTools -->
+    <script>
+        // Bloqueio de DevTools
+        (function() {
+            'use strict';
+            
+            // Detectar se DevTools está aberto
+            let devtools = {
+                open: false,
+                orientation: null
+            };
+            
+            const threshold = 160;
+            
+            setInterval(function() {
+                if (window.outerHeight - window.innerHeight > threshold || 
+                    window.outerWidth - window.innerWidth > threshold) {
+                    if (!devtools.open) {
+                        devtools.open = true;
+                        // Redirecionar ou fechar a página
+                        document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:Arial;"><h1>Acesso Negado</h1></div>';
+                        setTimeout(() => {
+                            window.location.href = 'about:blank';
+                        }, 1000);
+                    }
+                } else {
+                    devtools.open = false;
+                }
+            }, 500);
+            
+            // Bloquear teclas de atalho
+            document.addEventListener('keydown', function(e) {
+                // F12
+                if (e.keyCode === 123) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+I
+                if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+J
+                if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+U
+                if (e.ctrlKey && e.keyCode === 85) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+C
+                if (e.ctrlKey && e.shiftKey && e.keyCode === 67) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // Bloquear menu de contexto
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Detectar console (método alternativo)
+            let devtools_console = false;
+            const originalConsole = window.console;
+            
+            // Detectar abertura do console através de timing
+            let start = new Date();
+            debugger;
+            let end = new Date();
+            if (end - start > 100) {
+                devtools_console = true;
+            }
+            
+            // Verificar se console foi acessado
+            setInterval(function() {
+                if (devtools_console) {
+                    document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:Arial;"><h1>Acesso Negado</h1></div>';
+                    setTimeout(() => {
+                        window.location.href = 'about:blank';
+                    }, 1000);
+                }
+            }, 1000);
+            
+            // Bloquear seleção de texto
+            document.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Bloquear arrastar
+            document.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+        })();
+    </script>
+    
     <style>
         :root {
             --primary: #4361ee;
@@ -861,7 +964,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" id="cancelar-registro" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="salvar-registro">Criar Conta</button>
                 </div>
             </div>
@@ -2595,6 +2698,7 @@
             document.getElementById('login-form').addEventListener('submit', fazerLogin);
             document.getElementById('criar-conta-btn').addEventListener('click', abrirModalRegistro);
             document.getElementById('salvar-registro').addEventListener('click', criarConta);
+            document.getElementById('cancelar-registro').addEventListener('click', cancelarRegistro);
             document.getElementById('registro-senha').addEventListener('input', verificarForcaSenha);
             document.getElementById('registro-confirmar-senha').addEventListener('input', verificarSenhasIguais);
             
@@ -4034,6 +4138,29 @@
             bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
             const registroModal = new bootstrap.Modal(document.getElementById('registroModal'));
             registroModal.show();
+        }
+        
+        function cancelarRegistro() {
+            // Fechar modal de registro
+            const registroModal = bootstrap.Modal.getInstance(document.getElementById('registroModal'));
+            if (registroModal) {
+                registroModal.hide();
+            }
+            
+            // Limpar campos do formulário de registro
+            document.getElementById('registro-nome').value = '';
+            document.getElementById('registro-email').value = '';
+            document.getElementById('registro-senha').value = '';
+            document.getElementById('registro-confirmar-senha').value = '';
+            
+            // Ocultar mensagens de erro
+            document.getElementById('registro-error').classList.add('d-none');
+            
+            // Voltar para o modal de login
+            setTimeout(() => {
+                const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                loginModal.show();
+            }, 300); // Pequeno delay para suavizar a transição
         }
         
         function criarConta() {
