@@ -5,7 +5,6 @@
   "main": "index.html",
   "scripts": {
     "dev": "npx serve .",
-    "build": "echo 'Build completed - Static files ready'",
     "start": "npx serve .",
     "preview": "npx serve ."
   },
@@ -25,7 +24,7 @@
     "serve": "^14.2.1"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": "22.x"
   },
   "repository": {
     "type": "git",
