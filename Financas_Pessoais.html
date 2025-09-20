@@ -7,119 +7,12 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Finanças Pessoais | Fluxo de Caixa</title>
-    
-    <!-- Recursos locais como fallback -->
-    <link href="assets/css/bootstrap-minimal.css" rel="stylesheet">
-    <script src="assets/js/bootstrap-modal.js"></script>
-    
-    <!-- CDNs externos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    
-    <!-- Proteções contra cópia do código -->
-    <script>
-        // Proteção 1: Desabilitar menu de contexto (botão direito)
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            return false;
-        });
-        
-        // Proteção 2: Bloquear teclas de atalho para DevTools
-        document.addEventListener('keydown', function(e) {
-            // F12 - DevTools
-            if (e.key === 'F12') {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Ctrl+Shift+I - DevTools
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Ctrl+Shift+J - Console
-            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Ctrl+U - Ver código fonte
-            if (e.ctrlKey && e.key === 'u') {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Ctrl+Shift+C - Inspetor de elementos
-            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Ctrl+S - Salvar página
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Ctrl+A - Selecionar tudo (opcional)
-            if (e.ctrlKey && e.key === 'a') {
-                e.preventDefault();
-                return false;
-            }
-        });
-        
-        // Proteção 3: Detectar se DevTools está aberto
-        let devtools = {
-            open: false,
-            orientation: null
-        };
-        
-        const threshold = 160;
-        
-        setInterval(() => {
-            if (window.outerHeight - window.innerHeight > threshold || 
-                window.outerWidth - window.innerWidth > threshold) {
-                if (!devtools.open) {
-                    devtools.open = true;
-                    // Redirecionar ou mostrar aviso
-                    document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-size:24px;color:red;">⚠️ Acesso não autorizado detectado!</div>';
-                }
-            } else {
-                devtools.open = false;
-            }
-        }, 500);
-        
-        // Proteção 4: Desabilitar seleção de texto
-        document.addEventListener('selectstart', function(e) {
-            e.preventDefault();
-            return false;
-        });
-        
-        // Proteção 5: Desabilitar arrastar e soltar
-        document.addEventListener('dragstart', function(e) {
-            e.preventDefault();
-            return false;
-        });
-        
-        // Proteção 6: Limpar console periodicamente
-        setInterval(() => {
-            console.clear();
-        }, 1000);
-        
-        // Proteção 7: Detectar tentativas de debug
-        let startTime = new Date();
-        debugger;
-        let endTime = new Date();
-        if (endTime - startTime > 100) {
-            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-size:24px;color:red;">⚠️ Debug detectado!</div>';
-        }
-    </script>
-    
     <style>
         :root {
             --primary: #4361ee;
@@ -154,46 +47,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: var(--text-color);
             transition: background-color 0.3s ease, color 0.3s ease;
-            
-            /* Proteções CSS contra cópia */
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        /* Proteção adicional para elementos específicos */
-        * {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-        
-        /* Permitir seleção apenas em inputs e textareas */
-        input, textarea, [contenteditable="true"] {
-            -webkit-user-select: text !important;
-            -moz-user-select: text !important;
-            -ms-user-select: text !important;
-            user-select: text !important;
-        }
-        
-        /* Ocultar texto quando selecionado */
-        ::selection {
-            background: transparent;
-        }
-        
-        ::-moz-selection {
-            background: transparent;
-        }
-        
-        /* Proteção contra print screen */
-        @media print {
-            body {
-                display: none !important;
-            }
         }
         
         .navbar-brand {
@@ -4110,122 +3963,70 @@
         }
         
         // Funções de autenticação
-        async function verificarAutenticacao() {
+        function verificarAutenticacao() {
+            // Carregar usuários cadastrados
+            const usuariosSalvos = localStorage.getItem('financasUsuarios');
+            if (usuariosSalvos) {
+                usuarios = JSON.parse(usuariosSalvos);
+            }
+            
             // Verificar se há usuário logado
             const usuarioLogado = localStorage.getItem('financasUsuarioLogado') || sessionStorage.getItem('financasUsuarioLogado');
-            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-            
-            if (usuarioLogado && token) {
+            if (usuarioLogado) {
                 try {
                     usuarioAtual = JSON.parse(usuarioLogado);
-                    
-                    // Verificar se o token ainda é válido
-                    const response = await fetch('/api/auth/verify', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        // Token válido, usuário autenticado
-                        sessaoTemporaria = !localStorage.getItem('financasUsuarioLogado');
-                        atualizarInterfaceUsuarioLogado();
-                        carregarDadosSalvos();
-                        carregarFotoPerfil();
-                        return;
-                    } else {
-                        // Token inválido, limpar dados
-                        throw new Error('Token inválido');
-                    }
+                    // Definir se a sessão é temporária baseada no tipo de storage
+                    sessaoTemporaria = !localStorage.getItem('financasUsuarioLogado');
+                    atualizarInterfaceUsuarioLogado();
+                    carregarDadosSalvos();
+                    carregarFotoPerfil();
+                    return;
                 } catch (e) {
-                    console.error('Erro ao verificar autenticação:', e);
+                    console.error('Erro ao carregar usuário:', e);
                     localStorage.removeItem('financasUsuarioLogado');
                     sessionStorage.removeItem('financasUsuarioLogado');
-                    localStorage.removeItem('authToken');
-                    sessionStorage.removeItem('authToken');
-                    usuarioAtual = null;
                 }
             }
             
-            // Se não há usuário logado ou token inválido, mostrar modal de login
+            // Se não há usuário logado, mostrar modal de login
             const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
             loginModal.show();
         }
         
-        async function fazerLogin(e) {
+        function fazerLogin(e) {
             if (e) e.preventDefault();
             
             const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value;
             const lembrar = document.getElementById('lembrar-login').checked;
             
-            // Mostrar loading
-            const loginBtn = document.querySelector('#login-form button[type="submit"]');
-            const originalText = loginBtn.textContent;
-            loginBtn.textContent = 'Entrando...';
-            loginBtn.disabled = true;
+            // Validar credenciais
+            const usuario = usuarios.find(u => u.email === email && u.senha === senha);
             
-            try {
-                // Fazer login via API
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: senha
-                    })
-                });
+            if (usuario) {
+                // Login bem-sucedido
+                usuarioAtual = { nome: usuario.nome, email: usuario.email };
                 
-                const data = await response.json();
-                
-                if (response.ok && data.success) {
-                    // Login bem-sucedido
-                    usuarioAtual = { 
-                        nome: data.user.name, 
-                        email: data.user.email,
-                        role: data.user.role,
-                        token: data.token
-                    };
-                    
-                    if (lembrar) {
-                        localStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
-                        localStorage.setItem('authToken', data.token);
-                        sessaoTemporaria = false; // Sessão permanente
-                    } else {
-                        sessionStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
-                        sessionStorage.setItem('authToken', data.token);
-                        sessaoTemporaria = true; // Sessão temporária
-                    }
-                    
-                    // Fechar modal e atualizar interface
-                    bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
-                    atualizarInterfaceUsuarioLogado();
-                    carregarDadosSalvos();
-                    carregarFotoPerfil();
-                    aplicarFiltros();
+                if (lembrar) {
+                    localStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
+                    sessaoTemporaria = false; // Sessão permanente
                 } else {
-                    // Login falhou
-                    document.getElementById('login-error').textContent = data.message || 'Email ou senha incorretos';
-                    document.getElementById('login-error').classList.remove('d-none');
-                    setTimeout(() => {
-                        document.getElementById('login-error').classList.add('d-none');
-                    }, 5000);
+                    sessionStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
+                    sessaoTemporaria = true; // Sessão temporária
                 }
-            } catch (error) {
-                console.error('Erro no login:', error);
-                document.getElementById('login-error').textContent = 'Erro de conexão. Tente novamente.';
+                
+                // Fechar modal e atualizar interface
+                bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+                atualizarInterfaceUsuarioLogado();
+                carregarDadosSalvos();
+                carregarFotoPerfil();
+                aplicarFiltros();
+            } else {
+                // Login falhou
                 document.getElementById('login-error').classList.remove('d-none');
                 setTimeout(() => {
                     document.getElementById('login-error').classList.add('d-none');
-                }, 5000);
-            } finally {
-                // Restaurar botão
-                loginBtn.textContent = originalText;
-                loginBtn.disabled = false;
+                }, 3000);
             }
         }
         
@@ -4302,8 +4103,6 @@
             // Limpar dados de sessão
             localStorage.removeItem('financasUsuarioLogado');
             sessionStorage.removeItem('financasUsuarioLogado');
-            localStorage.removeItem('authToken');
-            sessionStorage.removeItem('authToken');
             usuarioAtual = null;
             
             // Limpar dados em memória
@@ -4316,9 +4115,6 @@
         }
         
         function atualizarInterfaceUsuarioLogado() {
-            // Remover classe que esconde o conteúdo principal
-            document.body.classList.remove('login-active');
-            
             // Atualizar nome do usuário na navbar
             const navbarBrand = document.querySelector('.navbar-brand');
             navbarBrand.innerHTML = `<i class="bi bi-cash-coin me-2"></i>Finanças de ${usuarioAtual.nome.split(' ')[0]}`;
