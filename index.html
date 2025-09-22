@@ -4234,7 +4234,9 @@
                 console.log('✅ Login via API bem-sucedido:', result.user);
                 return { success: true, user: result.user };
             } else {
-                console.log('⚠️ API falhou, usando localStorage. Erro:', result.error);
+                console.log('⚠️ API falhou, usando localStorage.');
+                console.log('📋 Detalhes do erro:', result.error || 'Erro desconhecido');
+                console.log('🔄 Fazendo fallback para localStorage...');
                 // Fallback para localStorage se API não estiver disponível
                 return loginUsuarioLocalStorage(email, senha);
             }
