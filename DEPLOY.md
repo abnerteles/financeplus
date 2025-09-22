@@ -17,7 +17,15 @@ git remote add origin https://github.com/seu-usuario/web-financial.git
 git push -u origin main
 ```
 
-### 2. Deploy na Vercel
+### 2. Configurar Variáveis de Ambiente (Opcional)
+
+Se quiser usar o banco Neon em produção:
+1. No dashboard da Vercel, vá em "Settings" > "Environment Variables"
+2. Adicione:
+   - `DATABASE_URL`: sua string de conexão do Neon
+   - `PORT`: 3001
+
+### 3. Deploy na Vercel
 
 #### Opção A: Via Dashboard Vercel
 1. Acesse [vercel.com](https://vercel.com)
@@ -27,7 +35,7 @@ git push -u origin main
 5. Configure:
    - **Framework Preset**: Other
    - **Root Directory**: ./
-   - **Build Command**: (deixe vazio)
+   - **Build Command**: `npm install`
    - **Output Directory**: ./
 6. Clique em "Deploy"
 

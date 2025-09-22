@@ -14,107 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
-    <!-- Proteção contra DevTools -->
-    <script>
-        // Bloqueio de DevTools
-        (function() {
-            'use strict';
-            
-            // Detectar se DevTools está aberto
-            let devtools = {
-                open: false,
-                orientation: null
-            };
-            
-            const threshold = 160;
-            
-            setInterval(function() {
-                if (window.outerHeight - window.innerHeight > threshold || 
-                    window.outerWidth - window.innerWidth > threshold) {
-                    if (!devtools.open) {
-                        devtools.open = true;
-                        // Redirecionar ou fechar a página
-                        document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:Arial;"><h1>Acesso Negado</h1></div>';
-                        setTimeout(() => {
-                            window.location.href = 'about:blank';
-                        }, 1000);
-                    }
-                } else {
-                    devtools.open = false;
-                }
-            }, 500);
-            
-            // Bloquear teclas de atalho
-            document.addEventListener('keydown', function(e) {
-                // F12
-                if (e.keyCode === 123) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+Shift+I
-                if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+Shift+J
-                if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+U
-                if (e.ctrlKey && e.keyCode === 85) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+Shift+C
-                if (e.ctrlKey && e.shiftKey && e.keyCode === 67) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-            
-            // Bloquear menu de contexto
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // Detectar console (método alternativo)
-            let devtools_console = false;
-            const originalConsole = window.console;
-            
-            // Detectar abertura do console através de timing
-            let start = new Date();
-            debugger;
-            let end = new Date();
-            if (end - start > 100) {
-                devtools_console = true;
-            }
-            
-            // Verificar se console foi acessado
-            setInterval(function() {
-                if (devtools_console) {
-                    document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:Arial;"><h1>Acesso Negado</h1></div>';
-                    setTimeout(() => {
-                        window.location.href = 'about:blank';
-                    }, 1000);
-                }
-            }, 1000);
-            
-            // Bloquear seleção de texto
-            document.addEventListener('selectstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // Bloquear arrastar
-            document.addEventListener('dragstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-        })();
-    </script>
+
     
     <style>
         :root {
@@ -1411,19 +1311,13 @@
                                 <option value="investimentos">Relatório de Investimentos</option>
                             </select>
                         </div>
-                        <div class="col-md-3" id="periodo-relatorio-div">
-                            <label for="periodo-relatorio" class="form-label">Período</label>
-                            <select class="form-select" id="periodo-relatorio">
-                                <!-- Opções serão adicionadas dinamicamente pelo JavaScript -->
-                            </select>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="data-inicio-relatorio" class="form-label">Data Início</label>
-                            <input type="date" class="form-control" id="data-inicio-relatorio">
+                            <input type="date" class="form-control" id="data-inicio-relatorio" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="data-fim-relatorio" class="form-label">Data Fim</label>
-                            <input type="date" class="form-control" id="data-fim-relatorio">
+                            <input type="date" class="form-control" id="data-fim-relatorio" required>
                         </div>
                     </div>
                     <div class="row mb-4">
@@ -1564,6 +1458,28 @@
                                     <input type="number" class="form-control" id="saldo-inicial-input" step="0.01" value="0">
                                     <button class="btn btn-primary" type="button" id="salvar-saldo-inicial">Salvar</button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-item">
+                        <h5>🧪 Teste de Diagnóstico</h5>
+                        <p>Ferramenta para diagnosticar problemas com lançamentos mensais</p>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <button class="btn btn-warning me-2 mb-2" type="button" onclick="testarLancamentoMensal()">
+                                    <i class="bi bi-bug me-1"></i> Executar Teste Completo
+                                </button>
+                                <button class="btn btn-success me-2 mb-2" type="button" onclick="criarLancamentoTesteOutubro()">
+                                    <i class="bi bi-plus-circle me-1"></i> Criar Teste Outubro 2024
+                                </button>
+                                <button class="btn btn-info me-2 mb-2" type="button" onclick="testarOutubro2025()">
+                                    <i class="bi bi-calendar-check me-1"></i> Testar Outubro 2025
+                                </button>
+                                <button class="btn btn-secondary mb-2" type="button" onclick="testarTransferencia()">
+                                    <i class="bi bi-arrow-left-right me-1"></i> Testar Transferência
+                                </button>
+                                <small class="text-muted d-block mt-1">Verifique o console do navegador (F12) para ver os resultados</small>
                             </div>
                         </div>
                     </div>
@@ -1739,7 +1655,49 @@
                     </div>
                     
                     <div class="config-item">
-                        <h5>🔄 Migração de Dados</h5>
+                        <h5>💾 Backup e Restauração</h5>
+                        <div class="alert alert-success">
+                            <i class="bi bi-shield-check me-1"></i>
+                            <strong>Proteja seus dados!</strong> Faça backup regularmente para não perder suas informações financeiras.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-download display-4 text-primary mb-3"></i>
+                                        <h6 class="card-title">Fazer Backup</h6>
+                                        <p class="card-text small">Salva todos os seus dados em um arquivo seguro</p>
+                                        <button class="btn btn-primary btn-lg w-100" id="backup-simples">
+                                            <i class="bi bi-download me-2"></i>Criar Backup
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-upload display-4 text-success mb-3"></i>
+                                        <h6 class="card-title">Restaurar Backup</h6>
+                                        <p class="card-text small">Recupera seus dados de um arquivo de backup</p>
+                                        <button class="btn btn-success btn-lg w-100" id="restaurar-simples">
+                                            <i class="bi bi-upload me-2"></i>Restaurar Dados
+                                        </button>
+                                        <input type="file" id="input-backup-simples" accept=".json" style="display: none;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <strong>Importante:</strong> O backup restaura TODOS os dados. Faça backup antes de restaurar se quiser manter os dados atuais.
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <h5>🔄 Migração de Dados (Avançado)</h5>
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-1"></i>
                             <strong>Dados em locais diferentes?</strong> Use esta ferramenta para migrar dados entre o arquivo HTML direto e o servidor web.
@@ -2521,10 +2479,17 @@
         let ativos = []; // Array para armazenar tickers cadastrados
         let corretoras = []; // Array para armazenar corretoras cadastradas
         
+        // Dados de bancos e cartões
+        let bancos = []; // Array para armazenar bancos e contas
+        
+        let cartoes = []; // Array para armazenar cartões de crédito
 
 
         // Categorias padrão
         let categorias = ['Alimentação', 'Transporte', 'Lazer', 'Salário', 'Moradia', 'Saúde'];
+        
+        // Tema da aplicação
+        let tema = 'light';
 
         // Nomes dos meses
         const meses = [
@@ -2687,6 +2652,19 @@
                 document.getElementById('input-importar-csv').click();
             });
             document.getElementById('input-importar-csv').addEventListener('change', importarCSV);
+            
+            // Event listeners para backup simplificado
+            document.getElementById('backup-simples').addEventListener('click', criarBackupSimples);
+            document.getElementById('restaurar-simples').addEventListener('click', function() {
+                document.getElementById('input-backup-simples').click();
+            });
+            document.getElementById('input-backup-simples').addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    restaurarBackupSimples(e.target.files[0]);
+                    e.target.value = ''; // Limpar input para permitir selecionar o mesmo arquivo novamente
+                }
+            });
+            
             document.getElementById('migrar-dados').addEventListener('click', migrarDadosHTML);
             document.getElementById('verificar-dados').addEventListener('click', verificarDadosDisponiveis);
             document.getElementById('salvar-saldo-inicial').addEventListener('click', salvarSaldoInicial);
@@ -2809,6 +2787,7 @@
             localStorage.setItem(`${userPrefix}Ativos`, JSON.stringify(ativos));
             localStorage.setItem(`${userPrefix}Corretoras`, JSON.stringify(corretoras));
             localStorage.setItem(`${userPrefix}Bancos`, JSON.stringify(bancos));
+            localStorage.setItem(`${userPrefix}Cartoes`, JSON.stringify(cartoes));
             localStorage.setItem('financasTema', document.body.getAttribute('data-theme') || 'light');
         }
 
@@ -2826,6 +2805,12 @@
             if (lancamentosSalvos) {
                 lancamentos = JSON.parse(lancamentosSalvos);
                 console.log(`✅ carregarDadosSalvos: ${lancamentos.length} lançamentos carregados`);
+                
+                // DEBUG: Mostrar todos os lançamentos carregados
+                console.log('🔍 DEBUG LANÇAMENTOS CARREGADOS:');
+                lancamentos.forEach(l => {
+                    console.log(`   ID: ${l.id} | Data: ${l.data} | Desc: ${l.descricao} | Tipo: ${l.tipo} | Valor: ${l.valor}`);
+                });
                 
                 // Verificar transferências duplicadas
                 const transferencias = lancamentos.filter(l => l.tipoTransacao === 'transferencia_contas');
@@ -2875,16 +2860,20 @@
             const investimentosSalvos = localStorage.getItem(`${userPrefix}Investimentos`);
             if (investimentosSalvos) {
                 investimentos = JSON.parse(investimentosSalvos);
+                console.log(`✅ carregarDadosSalvos: ${investimentos.length} investimentos carregados`);
             } else {
                 investimentos = [];
+                console.log('⚠️ carregarDadosSalvos: Nenhum investimento salvo encontrado, array zerado');
             }
             
             // Carregar dividendos
             const dividendosSalvos = localStorage.getItem(`${userPrefix}Dividendos`);
             if (dividendosSalvos) {
                 dividendos = JSON.parse(dividendosSalvos);
+                console.log(`✅ carregarDadosSalvos: ${dividendos.length} dividendos carregados`);
             } else {
                 dividendos = [];
+                console.log('⚠️ carregarDadosSalvos: Nenhum dividendo salvo encontrado, array zerado');
             }
             
 
@@ -2925,14 +2914,20 @@
             const bancosSalvos = localStorage.getItem(`${userPrefix}Bancos`);
             if (bancosSalvos) {
                 bancos = JSON.parse(bancosSalvos);
+                console.log(`✅ carregarDadosSalvos: ${bancos.length} bancos carregados`);
             } else {
-                // Fallback para bancos globais se não houver bancos específicos do usuário
-                const bancosGlobais = localStorage.getItem('bancos');
-                if (bancosGlobais) {
-                    bancos = JSON.parse(bancosGlobais);
-                } else {
-                    bancos = [];
-                }
+                bancos = [];
+                console.log('⚠️ carregarDadosSalvos: Nenhum banco salvo encontrado, array zerado');
+            }
+            
+            // Carregar cartões
+            const cartoesSalvos = localStorage.getItem(`${userPrefix}Cartoes`);
+            if (cartoesSalvos) {
+                cartoes = JSON.parse(cartoesSalvos);
+                console.log(`✅ carregarDadosSalvos: ${cartoes.length} cartões carregados`);
+            } else {
+                cartoes = [];
+                console.log('⚠️ carregarDadosSalvos: Nenhum cartão salvo encontrado, array zerado');
             }
             
             // Carregar tema
@@ -2941,6 +2936,48 @@
                 document.body.setAttribute('data-theme', temaSalvo);
                 document.getElementById('theme-toggle').checked = (temaSalvo === 'dark');
                 atualizarIconeTema(temaSalvo === 'dark');
+            }
+            
+            // Migrar contas antigas se necessário
+            if (bancos.length > 0) {
+                console.log('🔄 DEBUG: Migrando contas antigas...');
+                migrarContasAntigas();
+            }
+            
+            // Adicionar bancos de exemplo apenas se não existirem E se for um novo usuário
+            if (bancos.length === 0) {
+                console.log('🏦 DEBUG: Nenhum banco encontrado, inicializando exemplos');
+                inicializarBancosExemplo();
+                console.log(`🏦 DEBUG: Após inicialização: ${bancos.length} bancos criados`);
+            } else {
+                console.log(`🏦 DEBUG: ${bancos.length} bancos já existem, não inicializando exemplos`);
+            }
+            
+            // Adicionar investimentos de exemplo apenas se não existirem
+            if (investimentos.length === 0) {
+                console.log('📈 DEBUG: Nenhum investimento encontrado, inicializando exemplos');
+                inicializarInvestimentosExemplo();
+                console.log(`📈 DEBUG: Após inicialização: ${investimentos.length} investimentos criados`);
+            } else {
+                console.log(`📈 DEBUG: ${investimentos.length} investimentos já existem, não inicializando exemplos`);
+            }
+            
+            // Adicionar ativos de exemplo apenas se não existirem
+            if (ativos.length === 0) {
+                console.log('🏢 DEBUG: Nenhum ativo encontrado, inicializando exemplos');
+                inicializarAtivosExemplo();
+                console.log(`🏢 DEBUG: Após inicialização: ${ativos.length} ativos criados`);
+            } else {
+                console.log(`🏢 DEBUG: ${ativos.length} ativos já existem, não inicializando exemplos`);
+            }
+            
+            // Adicionar corretoras de exemplo apenas se não existirem
+            if (corretoras.length === 0) {
+                console.log('🏛️ DEBUG: Nenhuma corretora encontrada, inicializando exemplos');
+                inicializarCorretorasExemplo();
+                console.log(`🏛️ DEBUG: Após inicialização: ${corretoras.length} corretoras criadas`);
+            } else {
+                console.log(`🏛️ DEBUG: ${corretoras.length} corretoras já existem, não inicializando exemplos`);
             }
             
             // Carregar lançamentos na interface após carregar os dados
@@ -2978,10 +3015,14 @@
             // Extrair anos únicos dos lançamentos
             const anosUnicos = [...new Set(lancamentos.map(l => new Date(l.data).getFullYear()))].sort((a, b) => b - a);
             
-            // Extrair meses únicos dos lançamentos (para o ano atual)
+            // Obter o ano selecionado no filtro ou usar o ano atual como padrão
             const anoAtual = new Date().getFullYear();
+            const anoSelecionado = document.getElementById('ano') ? 
+                (document.getElementById('ano').value || anoAtual) : anoAtual;
+            
+            // Extrair meses únicos dos lançamentos para o ano selecionado
             const mesesUnicos = [...new Set(lancamentos
-                .filter(l => new Date(l.data).getFullYear() === anoAtual)
+                .filter(l => new Date(l.data).getFullYear() == anoSelecionado)
                 .map(l => new Date(l.data).getMonth())
             )].sort((a, b) => a - b);
             
@@ -3308,7 +3349,40 @@
                 return;
             }
             
+            // Calcular saldo inicial considerando lançamentos anteriores ao período filtrado
             let saldoAcumulado = saldoInicial;
+            
+            // Se há filtro aplicado, calcular saldo acumulado até o início do período
+            if (lancamentosParaExibir && lancamentosParaExibir !== lancamentos) {
+                // Obter a data mais antiga dos lançamentos filtrados
+                const datasLancamentosFiltrados = lancamentosParaExibir.map(l => new Date(l.data));
+                const dataInicioFiltro = new Date(Math.min(...datasLancamentosFiltrados));
+                
+                // Calcular saldo acumulado de todos os lançamentos anteriores ao filtro
+                const lancamentosAnteriores = lancamentos.filter(l => {
+                    const dataLancamento = new Date(l.data);
+                    return dataLancamento < dataInicioFiltro;
+                });
+                
+                // Ordenar lançamentos anteriores por data
+                const lancamentosAnterioresOrdenados = [...lancamentosAnteriores].sort((a, b) => 
+                    new Date(a.data) - new Date(b.data)
+                );
+                
+                // Calcular saldo acumulado dos lançamentos anteriores
+                lancamentosAnterioresOrdenados.forEach(lancamento => {
+                    const status = lancamento.status || 'realizado';
+                    const isTransferencia = lancamento.tipoTransacao === 'transferencia_interna';
+                    
+                    if ((status === 'realizado' || status === 'efetivada') && !isTransferencia) {
+                        if (lancamento.tipo === 'entrada') {
+                            saldoAcumulado += lancamento.valor;
+                        } else {
+                            saldoAcumulado -= lancamento.valor;
+                        }
+                    }
+                });
+            }
             
             // Ordenar lançamentos por data
             const lancamentosOrdenados = [...lancamentosExibicao].sort((a, b) => 
@@ -3976,8 +4050,7 @@
              atualizarTabelaOrcamentos();
              
              // Atualizar tabelas de bancos e cartões
-             atualizarTabelaBancos();
-             atualizarTabelaCartoes();
+             carregarTabelaBancos();
          }
          
          function atualizarListaCategorias() {
@@ -4066,6 +4139,85 @@
             }
         }
         
+        // Funções de API para integração com banco Neon
+        const API_BASE_URL = window.location.origin;
+        
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                console.warn('API não disponível, usando localStorage:', error);
+                return { success: false, error: 'API não disponível' };
+            }
+        }
+        
+        async function registrarUsuarioAPI(nome, email, senha) {
+            const result = await apiRequest('/register', {
+                method: 'POST',
+                body: JSON.stringify({ name: nome, email, password: senha })
+            });
+            
+            if (result.success) {
+                return { success: true, user: result.data.user };
+            } else {
+                // Fallback para localStorage se API não estiver disponível
+                return registrarUsuarioLocalStorage(nome, email, senha);
+            }
+        }
+        
+        async function loginUsuarioAPI(email, senha) {
+            const result = await apiRequest('/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password: senha })
+            });
+            
+            if (result.success) {
+                return { success: true, user: result.data.user };
+            } else {
+                // Fallback para localStorage se API não estiver disponível
+                return loginUsuarioLocalStorage(email, senha);
+            }
+        }
+        
+        function registrarUsuarioLocalStorage(nome, email, senha) {
+            // Verificar se email já existe
+            if (usuarios.some(u => u.email === email)) {
+                return { success: false, error: 'Este email já está cadastrado.' };
+            }
+            
+            // Criar novo usuário
+            const novoUsuario = { nome, email, senha, subscription_type: 'free' };
+            usuarios.push(novoUsuario);
+            localStorage.setItem('financasUsuarios', JSON.stringify(usuarios));
+            
+            return { success: true, user: { name: nome, email, subscription_type: 'free' } };
+        }
+        
+        function loginUsuarioLocalStorage(email, senha) {
+            const usuario = usuarios.find(u => u.email === email && u.senha === senha);
+            if (usuario) {
+                return { 
+                    success: true, 
+                    user: { 
+                        name: usuario.nome, 
+                        email: usuario.email, 
+                        subscription_type: usuario.subscription_type || 'free' 
+                    } 
+                };
+            } else {
+                return { success: false, error: 'Email ou senha incorretos.' };
+            }
+        }
+        
         // Funções de autenticação
         function verificarAutenticacao() {
             // Carregar usuários cadastrados
@@ -4084,6 +4236,8 @@
                     atualizarInterfaceUsuarioLogado();
                     carregarDadosSalvos();
                     carregarFotoPerfil();
+                    // Atualizar filtros após carregar os dados
+                    atualizarFiltros();
                     return;
                 } catch (e) {
                     console.error('Erro ao carregar usuário:', e);
@@ -4097,19 +4251,24 @@
             loginModal.show();
         }
         
-        function fazerLogin(e) {
+        async function fazerLogin(e) {
             if (e) e.preventDefault();
             
             const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value;
             const lembrar = document.getElementById('lembrar-login').checked;
             
-            // Validar credenciais
-            const usuario = usuarios.find(u => u.email === email && u.senha === senha);
+            // Tentar login via API primeiro, depois localStorage
+            const resultado = await loginUsuarioAPI(email, senha);
             
-            if (usuario) {
+            if (resultado.success) {
                 // Login bem-sucedido
-                usuarioAtual = { nome: usuario.nome, email: usuario.email };
+                usuarioAtual = { 
+                    nome: resultado.user.name, 
+                    email: resultado.user.email,
+                    subscription_type: resultado.user.subscription_type || 'free',
+                    subscription_active: resultado.user.subscription_active !== false
+                };
                 
                 if (lembrar) {
                     localStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
@@ -4124,9 +4283,12 @@
                 atualizarInterfaceUsuarioLogado();
                 carregarDadosSalvos();
                 carregarFotoPerfil();
+                // Atualizar filtros após carregar os dados
+                atualizarFiltros();
                 aplicarFiltros();
             } else {
                 // Login falhou
+                document.getElementById('login-error').textContent = resultado.error || 'Email ou senha incorretos.';
                 document.getElementById('login-error').classList.remove('d-none');
                 setTimeout(() => {
                     document.getElementById('login-error').classList.add('d-none');
@@ -4163,7 +4325,7 @@
             }, 300); // Pequeno delay para suavizar a transição
         }
         
-        function criarConta() {
+        async function criarConta() {
             const nome = document.getElementById('registro-nome').value.trim();
             const email = document.getElementById('registro-email').value.trim();
             const senha = document.getElementById('registro-senha').value;
@@ -4184,20 +4346,22 @@
                 return;
             }
             
-            // Verificar se email já existe
-            if (usuarios.some(u => u.email === email)) {
-                document.getElementById('registro-error').textContent = 'Este email já está cadastrado.';
+            // Tentar registrar via API primeiro, depois localStorage
+            const resultado = await registrarUsuarioAPI(nome, email, senha);
+            
+            if (!resultado.success) {
+                document.getElementById('registro-error').textContent = resultado.error || 'Erro ao criar conta.';
                 document.getElementById('registro-error').classList.remove('d-none');
                 return;
             }
             
-            // Criar novo usuário
-            const novoUsuario = { nome, email, senha };
-            usuarios.push(novoUsuario);
-            localStorage.setItem('financasUsuarios', JSON.stringify(usuarios));
-            
             // Fazer login com o novo usuário
-            usuarioAtual = { nome, email };
+            usuarioAtual = { 
+                nome: resultado.user.name, 
+                email: resultado.user.email,
+                subscription_type: resultado.user.subscription_type || 'free',
+                subscription_active: true
+            };
             localStorage.setItem('financasUsuarioLogado', JSON.stringify(usuarioAtual));
             
             // Fechar modal e atualizar interface
@@ -4214,6 +4378,17 @@
                 saldoInicial = 0.00;
                 nextId = 1;
                 categorias = ['Alimentação', 'Transporte', 'Lazer', 'Salário', 'Moradia', 'Saúde'];
+                bancos = [];
+                investimentos = [];
+                cartoes = [];
+                orcamentos = [];
+                dividendos = [];
+                ativos = [];
+                corretoras = [];
+                
+                // Inicializar bancos de exemplo para novo usuário
+                inicializarBancosExemplo();
+                
                 salvarDados();
             } else {
                 // Usuário existente - carregar dados salvos
@@ -4242,9 +4417,23 @@
         }
         
         function atualizarInterfaceUsuarioLogado() {
+            // Fechar modal de login se estiver aberto
+            const loginModalElement = document.getElementById('loginModal');
+            const loginModalInstance = bootstrap.Modal.getInstance(loginModalElement);
+            if (loginModalInstance) {
+                loginModalInstance.hide();
+            }
+            
             // Atualizar nome do usuário na navbar
             const navbarBrand = document.querySelector('.navbar-brand');
             navbarBrand.innerHTML = `<i class="bi bi-cash-coin me-2"></i>Finanças de ${usuarioAtual.nome.split(' ')[0]}`;
+            
+            // Mostrar conteúdo principal da aplicação
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
         }
         
         function verificarForcaSenha() {
@@ -4408,7 +4597,11 @@
             
             // Event listeners para os filtros de mês e ano
             document.getElementById('mes').addEventListener('change', aplicarFiltros);
-            document.getElementById('ano').addEventListener('change', aplicarFiltros);
+            document.getElementById('ano').addEventListener('change', function() {
+                // Atualizar meses disponíveis quando o ano mudar
+                atualizarFiltros();
+                aplicarFiltros();
+            });
             document.getElementById('anoAnual').addEventListener('change', aplicarFiltros);
             document.getElementById('categoria').addEventListener('change', aplicarFiltros);
         }
@@ -4457,6 +4650,9 @@
             const id = document.getElementById('lancamentoId').value;
             const data = document.getElementById('data').value;
             const descricao = document.getElementById('descricao').value;
+            
+            console.log(`🔍 DEBUG SALVAR LANÇAMENTO - Data obtida do formulário: "${data}"`);
+            console.log(`🔍 DEBUG SALVAR LANÇAMENTO - Data convertida: ${new Date(data)}`);
             const categoria = document.getElementById('categoriaModal').value;
             const banco = document.getElementById('bancoModal').value;
             const conta = document.getElementById('contaModal').value;
@@ -5021,7 +5217,9 @@
                         // Limpar todos os dados do localStorage
                         localStorage.removeItem(`${userPrefix}Lancamentos`);
                         localStorage.removeItem(`${userPrefix}Bancos`);
+                        localStorage.removeItem('bancos'); // Chave sem prefixo usada pelo sistema
                         localStorage.removeItem(`${userPrefix}Cartoes`);
+                        localStorage.removeItem('cartoes'); // Chave sem prefixo usada pelo sistema
                         localStorage.removeItem(`${userPrefix}Categorias`);
                         localStorage.removeItem(`${userPrefix}SaldoInicial`);
                         localStorage.removeItem(`${userPrefix}Orcamentos`);
@@ -5103,8 +5301,12 @@
             );
             
             if (confirmar) {
-                // Remover apenas os bancos do localStorage
+                // Remover apenas os bancos do localStorage (ambas as chaves para garantir)
                 localStorage.removeItem('bancos');
+                if (typeof usuarioAtual !== 'undefined' && usuarioAtual.email) {
+                    const userPrefix = `financas_${usuarioAtual.email}_`;
+                    localStorage.removeItem(`${userPrefix}Bancos`);
+                }
                 
                 // Reinicializar array de bancos
                 bancos = [];
@@ -5290,6 +5492,173 @@
             });
         }
 
+        // ===== FUNÇÕES DE BACKUP SIMPLIFICADO =====
+        
+        // Função para criar backup completo em JSON (simples para usuário final)
+        function criarBackupSimples() {
+            try {
+                // Coletar todos os dados disponíveis (independente de usuário)
+                const dadosCompletos = {
+                    versao: '2.0',
+                    dataBackup: new Date().toISOString(),
+                    usuario: usuarioAtual ? usuarioAtual.email : 'usuario_anonimo',
+                    dados: {
+                        lancamentos: lancamentos || [],
+                        saldoInicial: saldoInicial || 0,
+                        nextId: nextId || 1,
+                        categorias: categorias || [],
+                        orcamentos: orcamentos || [],
+                        investimentos: investimentos || [],
+                        dividendos: dividendos || [],
+                        nextInvestimentoId: nextInvestimentoId || 1,
+                        nextDividendoId: nextDividendoId || 1,
+                        ativos: ativos || [],
+                        corretoras: corretoras || [],
+                        bancos: bancos || [],
+                        cartoes: cartoes || [],
+                        tema: tema || 'light'
+                    }
+                };
+                
+                // Converter para JSON
+                const jsonString = JSON.stringify(dadosCompletos, null, 2);
+                
+                // Criar arquivo para download
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                // Criar link de download
+                const link = document.createElement('a');
+                link.href = url;
+                const dataFormatada = new Date().toISOString().split('T')[0];
+                link.download = `backup-financas-${dataFormatada}.json`;
+                
+                // Fazer download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                // Mostrar confirmação
+                const totalItens = (dadosCompletos.dados.lancamentos?.length || 0) + 
+                                 (dadosCompletos.dados.investimentos?.length || 0) + 
+                                 (dadosCompletos.dados.bancos?.length || 0);
+                
+                alert(`✅ Backup criado com sucesso!\n\n📁 Arquivo: backup-financas-${dataFormatada}.json\n📊 Total de itens: ${totalItens}\n\n💡 Guarde este arquivo em local seguro!`);
+                
+            } catch (error) {
+                console.error('Erro ao criar backup:', error);
+                alert('❌ Erro ao criar backup!\n\nTente novamente ou contate o suporte.');
+            }
+        }
+        
+        // Função para restaurar backup simples
+        function restaurarBackupSimples(arquivo) {
+            
+            if (!arquivo) {
+                alert('❌ Nenhum arquivo selecionado!');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    // Parse do JSON
+                    const dadosBackup = JSON.parse(e.target.result);
+                    
+                    // Validar estrutura do backup
+                    if (!dadosBackup.dados) {
+                        throw new Error('Formato de backup inválido - propriedade "dados" não encontrada');
+                    }
+                    
+                    // Verificar se tem pelo menos uma das propriedades esperadas
+                    const temDadosValidos = dadosBackup.dados.lancamentos !== undefined || 
+                                          dadosBackup.dados.investimentos !== undefined || 
+                                          dadosBackup.dados.bancos !== undefined ||
+                                          dadosBackup.dados.cartoes !== undefined;
+                    
+                    if (!temDadosValidos) {
+                        throw new Error('Backup não contém dados válidos');
+                    }
+                    
+                    // Confirmar restauração
+                    const totalItens = (dadosBackup.dados.lancamentos?.length || 0) + 
+                                     (dadosBackup.dados.investimentos?.length || 0) + 
+                                     (dadosBackup.dados.bancos?.length || 0);
+                    
+                    const dataBackup = new Date(dadosBackup.dataBackup).toLocaleDateString('pt-BR');
+                    
+                    if (!confirm(`🔄 Confirmar Restauração?\n\n📅 Data do backup: ${dataBackup}\n📊 Total de itens: ${totalItens}\n\n⚠️ ATENÇÃO: Todos os dados atuais serão substituídos!\n\nDeseja continuar?`)) {
+                        return;
+                    }
+                    
+                    // Mostrar indicador de carregamento
+                    mostrarIndicadorCarregamento('Restaurando backup...');
+                    
+                    // Restaurar dados
+                    const dados = dadosBackup.dados;
+                    lancamentos = dados.lancamentos || [];
+                    saldoInicial = dados.saldoInicial || 0;
+                    nextId = dados.nextId || 1;
+                    categorias = dados.categorias || [];
+                    orcamentos = dados.orcamentos || [];
+                    investimentos = dados.investimentos || [];
+                    dividendos = dados.dividendos || [];
+                    nextInvestimentoId = dados.nextInvestimentoId || 1;
+                    nextDividendoId = dados.nextDividendoId || 1;
+                    ativos = dados.ativos || [];
+                    corretoras = dados.corretoras || [];
+                    bancos = dados.bancos || [];
+                    cartoes = dados.cartoes || [];
+                    tema = dados.tema || 'light';
+                    
+                    // Salvar no localStorage
+                    salvarDados();
+                    
+                    // Atualizar interface
+                    carregarLancamentos();
+                    atualizarDashboard();
+                    carregarInvestimentos();
+                    atualizarTabelaInvestimentos();
+                    atualizarTabelaDividendos();
+                    carregarBancos();
+                    carregarTabelaBancos();
+                    carregarCartoes();
+                    carregarTabelaCartoes();
+                    carregarAtivos();
+                    carregarCorretoras();
+                    
+                    // Ocultar indicador
+                    ocultarIndicadorCarregamento();
+                    
+                    // Mostrar sucesso
+                    alert(`✅ Backup restaurado com sucesso!\n\n📊 Dados restaurados:\n• ${lancamentos.length} lançamentos\n• ${investimentos.length} investimentos\n• ${bancos.length} bancos\n• ${cartoes.length} cartões\n• ${ativos.length} ativos\n• ${corretoras.length} corretoras`);
+                    
+                } catch (error) {
+                    ocultarIndicadorCarregamento();
+                    console.error('Erro ao restaurar backup:', error);
+                    
+                    let mensagemErro = '❌ Erro ao restaurar backup!\n\n';
+                    
+                    if (error.message.includes('JSON')) {
+                        mensagemErro += 'O arquivo não é um JSON válido.';
+                    } else if (error.message.includes('dados')) {
+                        mensagemErro += 'Estrutura do backup inválida: ' + error.message;
+                    } else {
+                        mensagemErro += 'Verifique se o arquivo é um backup válido gerado por esta aplicação.\n\nDetalhes: ' + error.message;
+                    }
+                    
+                    alert(mensagemErro);
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('❌ Erro ao ler o arquivo!\n\nTente novamente.');
+            };
+            
+            reader.readAsText(arquivo);
+        }
+
         function exportarCSV() {
             if (lancamentos.length === 0 && investimentos.length === 0 && bancos.length === 0) {
                 alert('Não há dados para exportar.');
@@ -5333,7 +5702,7 @@
                     }
                 });
                 
-                zip.file("bancos_contas.csv", csvBancos);
+                zip.file("bancos.csv", csvBancos);
             }
             
             // 3. CARTÕES DE CRÉDITO
@@ -5410,7 +5779,270 @@
             });
         }
         
-        // Funções auxiliares para obter nomes
+        // Função de teste para verificar lançamentos mensais
+        function testarLancamentoMensal() {
+            console.log('🧪 TESTE: Iniciando teste de lançamento mensal');
+            
+            // Verificar lançamentos atuais
+            console.log(`🧪 TESTE: Total de lançamentos: ${lancamentos.length}`);
+            
+            // Mostrar TODOS os lançamentos para análise
+            console.log('🧪 TESTE: TODOS OS LANÇAMENTOS:');
+            lancamentos.forEach((l, index) => {
+                const dataObj = new Date(l.data);
+                console.log(`   ${index + 1}. ID: ${l.id} | Data: "${l.data}" | Parsed: ${dataObj.toISOString()} | Mês: ${dataObj.getMonth()} | Ano: ${dataObj.getFullYear()} | Desc: ${l.descricao}`);
+            });
+            
+            // Filtrar lançamentos de outubro 2024
+            const outubros = lancamentos.filter(l => {
+                const data = new Date(l.data);
+                return data.getMonth() === 9 && data.getFullYear() === 2024; // Outubro = mês 9
+            });
+            
+            console.log(`🧪 TESTE: Lançamentos de outubro 2024: ${outubros.length}`);
+            outubros.forEach(l => {
+                console.log(`   ID: ${l.id} | Data: ${l.data} | Desc: ${l.descricao} | Valor: ${l.valor}`);
+            });
+            
+            // Procurar lançamentos que contenham "2024-10" na string da data
+            const outubro2024String = lancamentos.filter(l => l.data && l.data.includes('2024-10'));
+            console.log(`🧪 TESTE: Lançamentos com "2024-10" na string: ${outubro2024String.length}`);
+            outubro2024String.forEach(l => {
+                console.log(`   ID: ${l.id} | Data: "${l.data}" | Desc: ${l.descricao}`);
+            });
+            
+            // Testar filtro de fluxo de caixa para outubro
+            const dataInicio = '2024-10-01';
+            const dataFim = '2024-10-31';
+            
+            console.log(`🧪 TESTE: Testando filtro de ${dataInicio} a ${dataFim}`);
+            
+            const inicio = new Date(dataInicio);
+            const fim = new Date(dataFim);
+            
+            const filtrados = lancamentos.filter(lancamento => {
+                const dataLancamento = new Date(lancamento.data);
+                return dataLancamento >= inicio && dataLancamento <= fim;
+            });
+            
+            console.log(`🧪 TESTE: Lançamentos filtrados: ${filtrados.length}`);
+            filtrados.forEach(l => {
+                console.log(`   ID: ${l.id} | Data: ${l.data} | Desc: ${l.descricao} | Valor: ${l.valor}`);
+            });
+        }
+        
+        // Função para criar lançamento de teste de outubro
+        function criarLancamentoTesteOutubro() {
+            console.log('🧪 TESTE: Criando lançamento de teste para outubro 2024');
+            
+            const novoLancamento = {
+                id: Date.now(),
+                data: '2024-10-15',
+                descricao: 'TESTE - Lançamento Outubro',
+                categoria: 'Teste',
+                valor: 100.00,
+                tipo: 'entrada',
+                status: 'confirmado'
+            };
+            
+            console.log('🧪 TESTE: Lançamento criado:', novoLancamento);
+            
+            // Adicionar ao array
+            lancamentos.push(novoLancamento);
+            
+            // Salvar no localStorage
+            const userPrefix = localStorage.getItem('usuarioAtual') || 'default';
+            localStorage.setItem(`${userPrefix}Lancamentos`, JSON.stringify(lancamentos));
+            
+            console.log('🧪 TESTE: Lançamento adicionado e salvo no localStorage');
+            console.log(`🧪 TESTE: Total de lançamentos agora: ${lancamentos.length}`);
+            
+            // Testar imediatamente se aparece no filtro
+            const outubros = lancamentos.filter(l => {
+                const data = new Date(l.data);
+                return data.getMonth() === 9 && data.getFullYear() === 2024;
+            });
+            
+            console.log(`🧪 TESTE: Lançamentos de outubro após criação: ${outubros.length}`);
+            
+            return novoLancamento;
+        }
+
+        // Função para testar filtro mensal completo
+        function testarFiltroMensal() {
+            console.log('🧪 TESTE FILTRO MENSAL - Iniciando...');
+            
+            // Criar lançamento de teste para outubro 2024
+            const lancamentoTeste = {
+                id: Date.now() + Math.random(),
+                data: '2024-10-15',
+                descricao: 'TESTE FILTRO - Lançamento Outubro 2024',
+                categoria: 'Teste',
+                valor: 500.00,
+                tipo: 'entrada',
+                status: 'realizado'
+            };
+            
+            // Adicionar ao array
+            lancamentos.push(lancamentoTeste);
+            console.log('✅ Lançamento de teste criado:', lancamentoTeste);
+            
+            // Testar filtro aplicarFiltros
+            console.log('🔍 Testando função aplicarFiltros...');
+            
+            // Simular seleção de outubro 2024
+            document.getElementById('periodo').value = 'mensal';
+            document.getElementById('mes').value = '9'; // Outubro = mês 9 (0-indexed)
+            document.getElementById('ano').value = '2024';
+            
+            console.log('📅 Filtros configurados: Mensal - Outubro/2024');
+            
+            // Executar filtro
+            const periodo = 'mensal';
+            const mes = 9; // Outubro
+            const ano = '2024';
+            
+            const lancamentosFiltrados = lancamentos.filter(l => {
+                const dataLancamento = new Date(l.data);
+                const anoLancamento = dataLancamento.getFullYear().toString();
+                const mesLancamento = dataLancamento.getMonth();
+                
+                console.log(`   Testando lançamento: ${l.descricao} | Data: ${l.data} | Ano: ${anoLancamento} | Mês: ${mesLancamento}`);
+                
+                let passaFiltro = true;
+                
+                // Filtro por período
+                if (periodo === 'mensal') {
+                    const passaAno = anoLancamento === ano;
+                    const passaMes = mesLancamento === mes;
+                    passaFiltro = passaAno && passaMes;
+                    console.log(`     Passa ano (${anoLancamento} === ${ano}): ${passaAno}`);
+                    console.log(`     Passa mês (${mesLancamento} === ${mes}): ${passaMes}`);
+                    console.log(`     Passa filtro final: ${passaFiltro}`);
+                }
+                
+                return passaFiltro;
+            });
+            
+            console.log(`🎯 RESULTADO: ${lancamentosFiltrados.length} lançamentos encontrados para outubro 2024`);
+            lancamentosFiltrados.forEach(l => {
+                console.log(`   ✅ ${l.descricao} - ${l.data} - R$ ${l.valor}`);
+            });
+            
+            // Remover lançamento de teste
+            const index = lancamentos.findIndex(l => l.id === lancamentoTeste.id);
+            if (index > -1) {
+                lancamentos.splice(index, 1);
+                console.log('🗑️ Lançamento de teste removido');
+            }
+            
+            return lancamentosFiltrados;
+        }
+         
+         // Função para testar outubro 2025 (ano correto dos dados)
+         function testarOutubro2025() {
+             console.log('🧪 TESTE: Verificando lançamentos de outubro 2025');
+             
+             // Filtrar lançamentos de outubro 2025
+             const outubro2025 = lancamentos.filter(l => {
+                 const data = new Date(l.data);
+                 return data.getMonth() === 9 && data.getFullYear() === 2025; // Outubro = mês 9
+             });
+             
+             console.log(`🧪 TESTE: Lançamentos de outubro 2025: ${outubro2025.length}`);
+             outubro2025.forEach(l => {
+                 console.log(`   ID: ${l.id} | Data: ${l.data} | Desc: ${l.descricao} | Valor: ${l.valor}`);
+             });
+             
+             // Testar filtro de fluxo de caixa para outubro 2025
+             const dataInicio = '2025-10-01';
+             const dataFim = '2025-10-31';
+             
+             console.log(`🧪 TESTE: Testando filtro de ${dataInicio} a ${dataFim}`);
+             
+             const inicio = new Date(dataInicio);
+             const fim = new Date(dataFim);
+             
+             const filtrados = lancamentos.filter(lancamento => {
+                 const dataLancamento = new Date(lancamento.data);
+                 return dataLancamento >= inicio && dataLancamento <= fim;
+             });
+             
+             console.log(`🧪 TESTE: Lançamentos filtrados para outubro 2025: ${filtrados.length}`);
+             filtrados.forEach(l => {
+                 console.log(`   ID: ${l.id} | Data: ${l.data} | Desc: ${l.descricao} | Valor: ${l.valor}`);
+             });
+         }
+
+         // Função para testar especificamente o lançamento de transferência
+         function testarTransferencia() {
+             console.log('🧪 TESTE TRANSFERÊNCIA - Iniciando...');
+             
+             // Procurar o lançamento específico de 10/10/2025
+             const lancamentoTransferencia = lancamentos.find(l => 
+                 l.data === '2025-10-10' && 
+                 l.descricao === 'teste' && 
+                 l.categoria === 'Salário' &&
+                 l.tipoTransacao === 'transferencia'
+             );
+             
+             if (lancamentoTransferencia) {
+                 console.log('✅ Lançamento de transferência encontrado:');
+                 console.log(`   Data: ${lancamentoTransferencia.data}`);
+                 console.log(`   Descrição: ${lancamentoTransferencia.descricao}`);
+                 console.log(`   Categoria: ${lancamentoTransferencia.categoria}`);
+                 console.log(`   Tipo: ${lancamentoTransferencia.tipo}`);
+                 console.log(`   tipoTransacao: ${lancamentoTransferencia.tipoTransacao || 'undefined'}`);
+                 console.log(`   Valor: R$ ${lancamentoTransferencia.valor.toFixed(2)}`);
+                 console.log(`   Status: ${lancamentoTransferencia.status}`);
+                 console.log(`   Banco: ${lancamentoTransferencia.banco}`);
+                 
+                 // Verificar se está sendo excluído como transferência interna
+                 const isTransferenciaInterna = lancamentoTransferencia.tipoTransacao === 'transferencia_interna';
+                 console.log(`   🔍 É transferência interna (excluída): ${isTransferenciaInterna}`);
+                 
+                 if (isTransferenciaInterna) {
+                     console.log('   ❌ PROBLEMA ENCONTRADO: Está marcado como transferência interna!');
+                     console.log('   💡 SOLUÇÃO: Precisa alterar o tipo ou categoria para aparecer no relatório');
+                 } else {
+                     console.log('   ✅ Não é transferência interna, deveria aparecer no relatório');
+                 }
+                 
+                 // Testar se aparece no filtro de outubro 2025
+                 const dataLancamento = new Date(lancamentoTransferencia.data);
+                 const isOutubro2025 = dataLancamento.getMonth() === 9 && dataLancamento.getFullYear() === 2025;
+                 console.log(`   Está em outubro 2025: ${isOutubro2025}`);
+                 
+                 // Testar filtro de período
+                 const dataInicio = new Date('2025-10-01');
+                 const dataFim = new Date('2025-10-31');
+                 const dentroDoFiltro = dataLancamento >= dataInicio && dataLancamento <= dataFim;
+                 console.log(`   Dentro do filtro mensal: ${dentroDoFiltro}`);
+                 
+                 // Verificar como o tipo 'Transferência' é processado no fluxo de caixa
+                 console.log(`   Tipo de movimentação: ${lancamentoTransferencia.tipo}`);
+                 
+                 // Simular processamento no fluxo de caixa
+                 if (lancamentoTransferencia.tipo === 'entrada') {
+                     console.log('   ➡️ Seria contabilizado como ENTRADA');
+                 } else if (lancamentoTransferencia.tipo === 'saida') {
+                     console.log('   ⬅️ Seria contabilizado como SAÍDA');
+                 } else {
+                     console.log('   ❓ Tipo não reconhecido como entrada ou saída - PODE SER O PROBLEMA!');
+                 }
+                 
+             } else {
+                 console.log('❌ Lançamento de transferência NÃO encontrado!');
+                 console.log('📋 Verificando todos os lançamentos de 10/10/2025:');
+                 
+                 const lancamentos10Out = lancamentos.filter(l => l.data === '2025-10-10');
+                 lancamentos10Out.forEach((l, index) => {
+                     console.log(`   ${index + 1}. ${l.descricao} - ${l.categoria} - ${l.tipo} - tipoTransacao: ${l.tipoTransacao || 'undefined'} - R$ ${l.valor.toFixed(2)}`);
+                 });
+             }
+         }
+         
+         // Funções auxiliares para obter nomes
         function obterNomeBanco(bancoId) {
             if (!bancoId) return '';
             const banco = bancos.find(b => b.id == bancoId);
@@ -5587,6 +6219,11 @@
                                 if (typeof carregarDados === 'function') {
                                     carregarDados();
                                 }
+                                
+                                // CRÍTICO: Salvar todos os dados no localStorage antes do reload
+                                console.log('💾 Salvando dados no localStorage...');
+                                salvarDados();
+                                console.log('✅ Dados salvos com sucesso!');
                             }, 100);
                             
                             // Limpar o input de arquivo
@@ -5610,10 +6247,48 @@
                             
                             alert(mensagem);
                             
-                            // Recarregar a página para garantir que todos os dados sejam exibidos
+                            // Reinicializar a interface sem reload da página
                             setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
+                                console.log('🔄 Reinicializando interface após restore...');
+                                
+                                // Verificar se bancos e investimentos precisam ser reinicializados
+                                if (bancos.length === 0) {
+                                    console.log('🏦 Nenhum banco importado, inicializando bancos de exemplo...');
+                                    inicializarBancosExemplo();
+                                }
+                                
+                                // Recarregar dados salvos
+                                carregarDadosSalvos();
+                                
+                                // Atualizar todas as interfaces
+                                atualizarInterfaceUsuarioLogado();
+                                aplicarFiltros();
+                                carregarCategorias();
+                                carregarBancos();
+                                carregarCartoes();
+                                carregarInvestimentos();
+                                atualizarTabelaInvestimentos();
+                                atualizarTabelaDividendos();
+                                
+                                // Atualizar saldos e resumos
+                                if (typeof atualizarResumo === 'function') {
+                                    atualizarResumo();
+                                }
+                                if (typeof atualizarSaldos === 'function') {
+                                    atualizarSaldos();
+                                }
+                                
+                                // Garantir que as abas estejam funcionando
+                                const tabElements = document.querySelectorAll('[data-bs-toggle="tab"]');
+                                tabElements.forEach(tab => {
+                                    if (!tab.hasAttribute('data-bs-initialized')) {
+                                        new bootstrap.Tab(tab);
+                                        tab.setAttribute('data-bs-initialized', 'true');
+                                    }
+                                });
+                                
+                                console.log('✅ Interface reinicializada com sucesso!');
+                            }, 500);
                         }).catch(function(error) {
                             ocultarIndicadorCarregamento();
                             console.error('Erro no processamento:', error);
@@ -5806,33 +6481,52 @@
                     // Processar e validar data
                     let dataProcessada = (campos[dataIdx] || '').replace(/"/g, '').trim();
                     if (dataProcessada) {
-                        // Tentar diferentes formatos de data
-                        const formatosData = [
-                            /^\d{4}-\d{2}-\d{2}$/, // YYYY-MM-DD
-                            /^\d{2}\/\d{2}\/\d{4}$/, // DD/MM/YYYY
-                            /^\d{2}-\d{2}-\d{4}$/, // DD-MM-YYYY
-                        ];
-                        
-                        let dataValida = false;
-                        for (const formato of formatosData) {
-                            if (formato.test(dataProcessada)) {
-                                dataValida = true;
-                                break;
+                        try {
+                            // Verificar formato DD/MM/YYYY (brasileiro)
+                            if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataProcessada)) {
+                                const [dia, mes, ano] = dataProcessada.split('/');
+                                const dataObj = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+                                if (!isNaN(dataObj.getTime()) && 
+                                    dataObj.getDate() == parseInt(dia) && 
+                                    dataObj.getMonth() == parseInt(mes) - 1 && 
+                                    dataObj.getFullYear() == parseInt(ano)) {
+                                    dataProcessada = dataObj.toISOString().split('T')[0]; // YYYY-MM-DD
+                                } else {
+                                    throw new Error('Data DD/MM/YYYY inválida');
+                                }
                             }
-                        }
-                        
-                        // Se não está em formato válido, tentar converter
-                        if (!dataValida) {
-                            const dataObj = new Date(dataProcessada);
-                            if (!isNaN(dataObj.getTime())) {
-                                dataProcessada = dataObj.toISOString().split('T')[0]; // YYYY-MM-DD
-                                dataValida = true;
+                            // Verificar formato DD-MM-YYYY
+                            else if (/^\d{2}-\d{2}-\d{4}$/.test(dataProcessada)) {
+                                const [dia, mes, ano] = dataProcessada.split('-');
+                                const dataObj = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+                                if (!isNaN(dataObj.getTime()) && 
+                                    dataObj.getDate() == parseInt(dia) && 
+                                    dataObj.getMonth() == parseInt(mes) - 1 && 
+                                    dataObj.getFullYear() == parseInt(ano)) {
+                                    dataProcessada = dataObj.toISOString().split('T')[0]; // YYYY-MM-DD
+                                } else {
+                                    throw new Error('Data DD-MM-YYYY inválida');
+                                }
                             }
-                        }
-                        
-                        // Se ainda não é válida, usar data atual
-                        if (!dataValida) {
-                            console.warn(`Data inválida na linha ${i + 1}: ${dataProcessada}, usando data atual`);
+                            // Verificar formato YYYY-MM-DD (ISO)
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(dataProcessada)) {
+                                const dataObj = new Date(dataProcessada + 'T00:00:00');
+                                if (isNaN(dataObj.getTime())) {
+                                    throw new Error('Data YYYY-MM-DD inválida');
+                                }
+                                // Já está no formato correto
+                            }
+                            // Tentar outros formatos
+                            else {
+                                const dataObj = new Date(dataProcessada);
+                                if (!isNaN(dataObj.getTime())) {
+                                    dataProcessada = dataObj.toISOString().split('T')[0]; // YYYY-MM-DD
+                                } else {
+                                    throw new Error('Formato de data não reconhecido');
+                                }
+                            }
+                        } catch (error) {
+                            console.warn(`Data inválida na linha ${i + 1}: "${dataProcessada}" - ${error.message}, usando data atual`);
                             dataProcessada = new Date().toISOString().split('T')[0];
                         }
                     } else {
@@ -6259,12 +6953,6 @@
 
         // Funções para relatórios avançados
         function inicializarRelatorios() {
-            // Inicializar o select de tipo de relatório
-            const tipoRelatorioSelect = document.getElementById('tipo-relatorio');
-            tipoRelatorioSelect.addEventListener('change', function() {
-                atualizarOpcoesRelatorio(this.value);
-            });
-            
             // Inicializar datepickers
             const dataInicioInput = document.getElementById('data-inicio-relatorio');
             const dataFimInput = document.getElementById('data-fim-relatorio');
@@ -6279,63 +6967,9 @@
             
             // Inicializar o gráfico de relatório vazio
             inicializarGraficoRelatorio();
-            
-            // Inicializar as opções de período com o tipo de relatório padrão
-            if (tipoRelatorioSelect.value) {
-                atualizarOpcoesRelatorio(tipoRelatorioSelect.value);
-            } else if (tipoRelatorioSelect.options.length > 0) {
-                // Se não houver valor selecionado, mas existirem opções, selecionar a primeira
-                tipoRelatorioSelect.selectedIndex = 0;
-                atualizarOpcoesRelatorio(tipoRelatorioSelect.value);
-            } else {
-                // Se não houver opções, definir um valor padrão
-                atualizarOpcoesRelatorio('fluxo-caixa');
-            }
         }
         
-        function atualizarOpcoesRelatorio(tipoRelatorio) {
-            const periodoRelatorioDiv = document.getElementById('periodo-relatorio-div');
-            const periodoRelatorioSelect = document.getElementById('periodo-relatorio');
-            
-            // Limpar opções anteriores
-            periodoRelatorioSelect.innerHTML = '';
-            
-            switch(tipoRelatorio) {
-                case 'fluxo-caixa':
-                    periodoRelatorioDiv.classList.remove('d-none');
-                    // Adicionar opções para fluxo de caixa
-                    adicionarOpcao(periodoRelatorioSelect, 'diario', 'Diário');
-                    adicionarOpcao(periodoRelatorioSelect, 'semanal', 'Semanal');
-                    adicionarOpcao(periodoRelatorioSelect, 'mensal', 'Mensal');
-                    break;
-                    
-                case 'categoria':
-                    periodoRelatorioDiv.classList.remove('d-none');
-                    // Adicionar opções para análise por categoria
-                    adicionarOpcao(periodoRelatorioSelect, 'pizza', 'Gráfico de Pizza');
-                    adicionarOpcao(periodoRelatorioSelect, 'barras', 'Gráfico de Barras');
-                    break;
-                    
-                case 'tendencia':
-                    periodoRelatorioDiv.classList.remove('d-none');
-                    // Adicionar opções para análise de tendência
-                    adicionarOpcao(periodoRelatorioSelect, 'mensal', 'Mensal');
-                    adicionarOpcao(periodoRelatorioSelect, 'trimestral', 'Trimestral');
-                    adicionarOpcao(periodoRelatorioSelect, 'anual', 'Anual');
-                    break;
-                    
-                default:
-                    periodoRelatorioDiv.classList.add('d-none');
-                    break;
-            }
-        }
-        
-        function adicionarOpcao(select, valor, texto) {
-            const option = document.createElement('option');
-            option.value = valor;
-            option.textContent = texto;
-            select.appendChild(option);
-        }
+
         
         function inicializarGraficoRelatorio() {
             const ctx = document.getElementById('relatorioChart').getContext('2d');
@@ -6383,7 +7017,6 @@
             verificarAtualizacaoFluxoCaixa();
             
             const tipoRelatorio = document.getElementById('tipo-relatorio').value;
-            const periodoRelatorio = document.getElementById('periodo-relatorio').value;
             const dataInicio = document.getElementById('data-inicio-relatorio').value;
             const dataFim = document.getElementById('data-fim-relatorio').value;
             const filtroStatus = document.getElementById('filtro-status').value;
@@ -6429,24 +7062,24 @@
             
             // Se comparação está ativa, gerar relatório comparativo
             if (compararStatus) {
-                gerarRelatorioComparativo(lancamentosFiltrados, tipoRelatorio, periodoRelatorio);
+                gerarRelatorioComparativo(lancamentosFiltrados, tipoRelatorio, dataInicio, dataFim);
             } else {
                 // Gerar relatório de acordo com o tipo selecionado
                 switch(tipoRelatorio) {
                     case 'fluxo-caixa':
-                        gerarRelatorioFluxoCaixa(lancamentosFiltrados, periodoRelatorio);
+                        gerarRelatorioFluxoCaixa(lancamentosFiltrados, dataInicio, dataFim);
                         break;
                         
                     case 'categoria':
-                        gerarRelatorioCategoria(lancamentosFiltrados, periodoRelatorio);
+                        gerarRelatorioCategoria(lancamentosFiltrados, dataInicio, dataFim);
                         break;
                         
                     case 'tendencia':
-                        gerarRelatorioTendencia(lancamentosFiltrados, periodoRelatorio);
+                        gerarRelatorioTendencia(lancamentosFiltrados, dataInicio, dataFim);
                         break;
                         
                     case 'investimentos':
-                        gerarRelatorioInvestimentos(periodoRelatorio);
+                        gerarRelatorioInvestimentos(dataInicio, dataFim);
                         break;
                         
                     default:
@@ -6459,7 +7092,7 @@
             atualizarEstatisticasRelatorio(lancamentosFiltrados);
         }
         
-        function gerarRelatorioComparativo(lancamentos, tipoRelatorio, periodoRelatorio) {
+        function gerarRelatorioComparativo(lancamentos, tipoRelatorio, dataInicio, dataFim) {
             // Ocultar tabela do fluxo de caixa
             document.getElementById('fluxo-caixa-tabela').style.display = 'none';
             
@@ -6645,7 +7278,7 @@
             }
         }
         
-        function gerarRelatorioFluxoCaixa(lancamentos, periodo) {
+        function gerarRelatorioFluxoCaixa(lancamentos, dataInicio, dataFim) {
             // Gerar dados do fluxo de caixa usando a função dedicada
             const dadosFluxoCaixa = gerarDadosFluxoCaixa();
             
@@ -7554,7 +8187,6 @@
         function exibirTabelaFluxoCaixa(dadosFluxoCaixa) {
             const tabelaDiv = document.getElementById('fluxo-caixa-tabela');
             const tbody = document.getElementById('fluxo-caixa-tbody');
-            const periodo = document.getElementById('periodo-relatorio').value;
             
             // Limpar tabela anterior
             tbody.innerHTML = '';
@@ -7624,7 +8256,6 @@
         function gerarDadosFluxoCaixa() {
             const dataInicio = document.getElementById('data-inicio-relatorio').value;
             const dataFim = document.getElementById('data-fim-relatorio').value;
-            const periodo = document.getElementById('periodo-relatorio').value;
             
             if (!dataInicio || !dataFim) {
                 mostrarMensagem('Por favor, selecione as datas de início e fim.', 'warning');
@@ -7635,44 +8266,44 @@
             const fim = new Date(dataFim);
             
             // Filtrar lançamentos no período
+            console.log(`🔍 DEBUG FILTRO - Início: ${inicio} | Fim: ${fim}`);
+            console.log(`🔍 DEBUG FILTRO - Total de lançamentos disponíveis: ${lancamentos.length}`);
+            
             const lancamentosFiltrados = lancamentos.filter(lancamento => {
                 const dataLancamento = new Date(lancamento.data);
-                return dataLancamento >= inicio && dataLancamento <= fim;
+                const dentroDoFiltro = dataLancamento >= inicio && dataLancamento <= fim;
+                
+                console.log(`   Lançamento ID ${lancamento.id}: Data ${lancamento.data} -> ${dataLancamento} | Dentro do filtro: ${dentroDoFiltro}`);
+                
+                return dentroDoFiltro;
             });
             
+            console.log(`🔍 DEBUG FILTRO - Lançamentos filtrados: ${lancamentosFiltrados.length}`);
+            
             // Calcular saldo acumulado de todos os lançamentos anteriores ao período
-            let saldoAcumulado = saldoInicial;
+            // Garantir que estamos usando o saldo inicial correto do localStorage
+            const saldoInicialSalvo = localStorage.getItem(`${userPrefix}SaldoInicial`);
+            const saldoInicialAtual = saldoInicialSalvo ? parseFloat(saldoInicialSalvo) : 0;
+            let saldoAcumulado = saldoInicialAtual;
             
             // Somar todos os lançamentos anteriores ao período de início
             lancamentos.forEach(lancamento => {
                 const dataLancamento = new Date(lancamento.data);
                 if (dataLancamento < inicio) {
-                    if (lancamento.tipo === 'entrada') {
+                    if (lancamento.tipo === 'entrada' || lancamento.tipo === 'Transferência') {
                         saldoAcumulado += lancamento.valor;
-                    } else {
+                    } else if (lancamento.tipo === 'saida') {
                         saldoAcumulado -= lancamento.valor;
                     }
                 }
             });
             
-            // Organizar por período (mensal ou anual)
+            // Organizar por período mensal
             const fluxoCaixa = {};
             
-            // Determinar formato da chave baseado no período
+            // Formato da chave: MM/AAAA
             const formatarChave = (data) => {
-                if (periodo === 'anual') {
-                    return data.getFullYear().toString();
-                } else if (periodo === 'diario') {
-                    return `${String(data.getDate()).padStart(2, '0')}/${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
-                } else if (periodo === 'semanal') {
-                    // Calcular semana do ano
-                    const inicioAno = new Date(data.getFullYear(), 0, 1);
-                    const diasPassados = Math.floor((data - inicioAno) / (24 * 60 * 60 * 1000));
-                    const semana = Math.ceil((diasPassados + inicioAno.getDay() + 1) / 7);
-                    return `Semana ${semana}/${data.getFullYear()}`;
-                } else {
-                    return `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
-                }
+                return `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
             };
             
             // Não inicializar períodos vazios - apenas criar quando houver movimentação
@@ -7691,15 +8322,15 @@
                             periodo: chave,
                             entradas: 0,
                             saidas: 0,
-                            saldoInicial: saldoAcumulado,
-                            saldoFinal: saldoAcumulado,
+                            saldoInicial: 0,
+                            saldoFinal: 0,
                             transacoes: []
                         };
                     }
                     
-                    if (lancamento.tipo === 'entrada') {
+                    if (lancamento.tipo === 'entrada' || lancamento.tipo === 'Transferência') {
                         fluxoCaixa[chave].entradas += lancamento.valor;
-                    } else {
+                    } else if (lancamento.tipo === 'saida') {
                         fluxoCaixa[chave].saidas += lancamento.valor;
                     }
                     
@@ -7714,32 +8345,17 @@
             });
             
             // Calcular saldos finais
-            // Ordenar períodos cronologicamente baseado no tipo de período
+            // Ordenar períodos cronologicamente (formato MM/AAAA)
             const periodosOrdenados = Object.keys(fluxoCaixa).sort((a, b) => {
-                if (periodo === 'diario') {
-                    // Para período diário, converter DD/MM/AAAA para Date para ordenação correta
-                    const [diaA, mesA, anoA] = a.split('/');
-                    const [diaB, mesB, anoB] = b.split('/');
-                    const dataA = new Date(anoA, mesA - 1, diaA);
-                    const dataB = new Date(anoB, mesB - 1, diaB);
-                    return dataA - dataB;
-                } else if (periodo === 'semanal') {
-                    // Para período semanal, extrair ano e semana
-                    const [semanaA, anoA] = a.replace('Semana ', '').split('/');
-                    const [semanaB, anoB] = b.replace('Semana ', '').split('/');
-                    if (anoA !== anoB) return anoA - anoB;
-                    return semanaA - semanaB;
-                } else if (periodo === 'anual') {
-                    return a - b;
-                } else {
-                    // Para período mensal MM/AAAA
-                    const [mesA, anoA] = a.split('/');
-                    const [mesB, anoB] = b.split('/');
-                    if (anoA !== anoB) return anoA - anoB;
-                    return mesA - mesB;
-                }
+                const [mesA, anoA] = a.split('/');
+                const [mesB, anoB] = b.split('/');
+                if (anoA !== anoB) return anoA - anoB;
+                return mesA - mesB;
             });
-            let saldoCorrente = saldoInicial;
+            let saldoCorrente = saldoAcumulado;
+            
+            console.log('DEBUG Fluxo Caixa - Saldo acumulado inicial:', saldoAcumulado);
+            console.log('DEBUG Fluxo Caixa - Períodos ordenados:', periodosOrdenados);
             
             // Filtrar períodos válidos e calcular saldos
             const periodosValidos = [];
@@ -7751,36 +8367,44 @@
                     return; // Pular períodos sem movimentação
                 }
                 
-                // Verificar se o período está dentro do intervalo
-                let periodoValido = false;
+                // Verificar se o período está dentro do intervalo (agrupamento mensal)
+                const [mes, ano] = periodoChave.split('/');
+                const dataPeriodo = new Date(ano, mes - 1, 1);
+                const fimMes = new Date(ano, mes, 0);
                 
-                if (periodo === 'diario') {
-                    const [dia, mes, ano] = periodoChave.split('/');
-                    const dataPeriodo = new Date(ano, mes - 1, dia);
-                    periodoValido = dataPeriodo >= inicio && dataPeriodo <= fim;
-                } else if (periodo === 'semanal') {
-                    // Para semanal, verificar se há transações no período
-                    periodoValido = fluxoCaixa[periodoChave].transacoes.length > 0 || 
-                                   fluxoCaixa[periodoChave].entradas > 0 || 
-                                   fluxoCaixa[periodoChave].saidas > 0;
-                } else if (periodo === 'anual') {
-                    const anoPeriodo = parseInt(periodoChave);
-                    periodoValido = anoPeriodo >= inicio.getFullYear() && anoPeriodo <= fim.getFullYear();
-                } else {
-                    // Para mensal
-                    const [mes, ano] = periodoChave.split('/');
-                    const dataPeriodo = new Date(ano, mes - 1, 1);
-                    const fimMes = new Date(ano, mes, 0);
-                    periodoValido = (dataPeriodo <= fim && fimMes >= inicio);
-                }
+                // Sempre processar períodos até o fim do filtro para calcular saldo corretamente
+                const periodoValido = dataPeriodo <= fim;
+                
+                // Mas só incluir no relatório os períodos dentro do filtro
+                const incluirNoRelatorio = (dataPeriodo <= fim && fimMes >= inicio);
                 
                 if (periodoValido) {
-                    periodosValidos.push(periodoChave);
+                    // Sempre calcular o saldo para manter a sequência correta
                     fluxoCaixa[periodoChave].saldoInicial = saldoCorrente;
                     const movimento = fluxoCaixa[periodoChave].entradas - fluxoCaixa[periodoChave].saidas;
                     saldoCorrente += movimento;
                     fluxoCaixa[periodoChave].saldoFinal = saldoCorrente;
                     fluxoCaixa[periodoChave].movimento = movimento;
+                    
+                    // Só incluir no relatório se estiver dentro do filtro
+                    if (incluirNoRelatorio) {
+                        periodosValidos.push(periodoChave);
+                        console.log(`DEBUG Período ${periodoChave} (INCLUÍDO):`, {
+                            saldoInicial: fluxoCaixa[periodoChave].saldoInicial,
+                            entradas: fluxoCaixa[periodoChave].entradas,
+                            saidas: fluxoCaixa[periodoChave].saidas,
+                            movimento: movimento,
+                            saldoFinal: fluxoCaixa[periodoChave].saldoFinal
+                        });
+                    } else {
+                        console.log(`DEBUG Período ${periodoChave} (PROCESSADO mas não incluído):`, {
+                            saldoInicial: fluxoCaixa[periodoChave].saldoInicial,
+                            entradas: fluxoCaixa[periodoChave].entradas,
+                            saidas: fluxoCaixa[periodoChave].saidas,
+                            movimento: movimento,
+                            saldoFinal: fluxoCaixa[periodoChave].saldoFinal
+                        });
+                    }
                 }
             });
             
@@ -7822,8 +8446,7 @@
             pdf.text(`Período: ${document.getElementById('data-inicio-relatorio').value} a ${document.getElementById('data-fim-relatorio').value}`, margin, yPosition);
             
             yPosition += 10;
-            const tipoPeriodo = document.getElementById('periodo-relatorio').value === 'anual' ? 'Anual' : 'Mensal';
-            pdf.text(`Agrupamento: ${tipoPeriodo}`, margin, yPosition);
+            pdf.text(`Agrupamento: Mensal`, margin, yPosition);
             
             yPosition += 10;
             pdf.text(`Data de geração: ${new Date().toLocaleDateString('pt-BR')}`, margin, yPosition);
@@ -7927,10 +8550,6 @@
         });
 
         // ===== GERENCIAMENTO DE BANCOS E CARTÕES =====
-        
-        // Variáveis globais para bancos e cartões
-        let bancos = JSON.parse(localStorage.getItem('bancos')) || [];
-        let cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
         
         // Logos dos bancos em SVG
         const logosbancos = {
@@ -8068,35 +8687,79 @@
          
          // Função para carregar bancos nos selects
         function carregarBancos() {
+            // Carregar bancos no select do modal de lançamentos
             const selectBanco = document.getElementById('bancoModal');
-            selectBanco.innerHTML = '<option value="">Selecione um banco</option>';
+            if (selectBanco) {
+                selectBanco.innerHTML = '<option value="">Selecione um banco</option>';
+                
+                // Filtrar apenas bancos válidos
+                const bancosValidos = bancos.filter(banco => {
+                    return banco && 
+                           banco.nome && 
+                           banco.nome !== 'undefined' && 
+                           banco.id && 
+                           banco.contas && 
+                           Array.isArray(banco.contas) &&
+                           banco.contas.length > 0;
+                });
+                
+                bancosValidos.forEach(banco => {
+                    const option = document.createElement('option');
+                    option.value = banco.id;
+                    option.textContent = banco.nome;
+                    option.setAttribute('data-logo', obterLogoBanco(banco.nome));
+                    selectBanco.appendChild(option);
+                });
+                
+                // Adicionar classe para estilização customizada
+                selectBanco.classList.add('select-com-logo');
+                
+                // Adicionar event listener para aplicar logo
+                selectBanco.addEventListener('change', function() {
+                    aplicarLogoBanco(this);
+                });
+            }
             
-            // Filtrar apenas bancos válidos
-            const bancosValidos = bancos.filter(banco => {
-                return banco && 
-                       banco.nome && 
-                       banco.nome !== 'undefined' && 
-                       banco.id && 
-                       banco.contas && 
-                       Array.isArray(banco.contas) &&
-                       banco.contas.length > 0;
-            });
-            
-            bancosValidos.forEach(banco => {
-                const option = document.createElement('option');
-                option.value = banco.id;
-                option.textContent = banco.nome;
-                option.setAttribute('data-logo', obterLogoBanco(banco.nome));
-                selectBanco.appendChild(option);
-            });
-            
-            // Adicionar classe para estilização customizada
-            selectBanco.classList.add('select-com-logo');
-            
-            // Adicionar event listener para aplicar logo
-            selectBanco.addEventListener('change', function() {
-                aplicarLogoBanco(this);
-            });
+            // Carregar bancos no select da página de configurações
+            const selectBancoConfig = document.getElementById('select-banco-config');
+            if (selectBancoConfig) {
+                // Manter as opções padrão e adicionar os bancos criados pelo usuário
+                const opcoesPadrao = `
+                    <option value="">Selecione um banco</option>
+                    <option value="Nubank" data-logo="nubank">Nubank</option>
+                    <option value="Inter" data-logo="inter">Inter</option>
+                    <option value="Bradesco" data-logo="bradesco">Bradesco</option>
+                    <option value="Itaú" data-logo="itau">Itaú</option>
+                    <option value="Santander" data-logo="santander">Santander</option>
+                    <option value="Caixa Econômica Federal" data-logo="caixa">Caixa Econômica Federal</option>
+                    <option value="Banco do Brasil" data-logo="bb">Banco do Brasil</option>
+                    <option value="C6 Bank" data-logo="c6">C6 Bank</option>
+                    <option value="PicPay" data-logo="picpay">PicPay</option>
+                    <option value="Neon" data-logo="neon">Neon</option>
+                `;
+                
+                selectBancoConfig.innerHTML = opcoesPadrao;
+                
+                // Adicionar bancos criados pelo usuário que não estão na lista padrão
+                const bancosValidos = bancos.filter(banco => {
+                    return banco && 
+                           banco.nome && 
+                           banco.nome !== 'undefined' && 
+                           banco.id;
+                });
+                
+                const bancosExistentes = ['Nubank', 'Inter', 'Bradesco', 'Itaú', 'Santander', 'Caixa Econômica Federal', 'Banco do Brasil', 'C6 Bank', 'PicPay', 'Neon'];
+                
+                bancosValidos.forEach(banco => {
+                    if (!bancosExistentes.includes(banco.nome)) {
+                        const option = document.createElement('option');
+                        option.value = banco.nome;
+                        option.textContent = banco.nome;
+                        option.setAttribute('data-logo', obterLogoBanco(banco.nome));
+                        selectBancoConfig.appendChild(option);
+                    }
+                });
+            }
         }
         
         // Função para carregar contas baseadas no banco selecionado
@@ -8219,8 +8882,8 @@
             
             banco.contas.push(novaConta);
             
-            // Salvar no localStorage
-            localStorage.setItem('bancos', JSON.stringify(bancos));
+            // Salvar no localStorage usando a função centralizada
+            salvarDados();
             
             // Limpar campos
             document.getElementById('select-banco-config').value = '';
@@ -8284,7 +8947,7 @@
             if (bancos.length !== bancosValidos.length) {
                 console.log('Dados inválidos encontrados, limpando automaticamente...');
                 bancos = bancosValidos;
-                localStorage.setItem('bancos', JSON.stringify(bancos));
+                salvarDados();
             }
         }
         
@@ -8327,10 +8990,8 @@
                        lancamento.conta !== 'undefined';
             });
             
-            // Salvar dados limpos
-            const userPrefix = localStorage.getItem('currentUser') || 'default';
-            localStorage.setItem(`${userPrefix}Bancos`, JSON.stringify(bancos));
-            localStorage.setItem(`${userPrefix}Lancamentos`, JSON.stringify(lancamentos));
+            // Salvar dados limpos usando a função centralizada
+            salvarDados();
             
             // Recarregar interfaces
             carregarTabelaBancos();
@@ -8389,7 +9050,7 @@
                     bancos = bancos.filter(b => b.id != bancoId);
                 }
                 
-                localStorage.setItem('bancos', JSON.stringify(bancos));
+                salvarDados();
                 carregarTabelaBancos();
                 carregarBancos();
                 
@@ -8423,7 +9084,7 @@
             };
             
             cartoes.push(novoCartao);
-            localStorage.setItem('cartoes', JSON.stringify(cartoes));
+            salvarDados();
             
             // Limpar campos
             document.getElementById('novo-cartao').value = '';
@@ -8474,7 +9135,7 @@
         function excluirCartao(cartaoId) {
             if (confirm('Tem certeza que deseja excluir este cartão?')) {
                 cartoes = cartoes.filter(c => c.id != cartaoId);
-                localStorage.setItem('cartoes', JSON.stringify(cartoes));
+                salvarDados();
                 carregarTabelaCartoes();
                 carregarCartoes();
             }
@@ -8493,7 +9154,7 @@
                 // Garantir que o usado não seja negativo
                 cartao.usado = Math.max(0, cartao.usado);
                 
-                localStorage.setItem('cartoes', JSON.stringify(cartoes));
+                salvarDados();
                 carregarTabelaCartoes();
             }
         }
@@ -9674,7 +10335,10 @@
         
         // Função para migrar contas antigas (strings) para nova estrutura (objetos)
         function migrarContasAntigas() {
+            if (!usuarioAtual) return;
+            
             let precisaMigrar = false;
+            const userPrefix = `financas_${usuarioAtual.email}_`;
             
             bancos.forEach(banco => {
                 if (banco.contas && banco.contas.length > 0) {
@@ -9693,17 +10357,15 @@
             });
             
             if (precisaMigrar) {
-                localStorage.setItem('bancos', JSON.stringify(bancos));
+                localStorage.setItem(`${userPrefix}Bancos`, JSON.stringify(bancos));
             }
         }
         
-        // Migrar contas antigas se necessário
-        if (bancos.length > 0) {
-            migrarContasAntigas();
-        }
-        
-        // Adicionar bancos de exemplo apenas se não existirem
-        if (bancos.length === 0) {
+        // Função para inicializar bancos de exemplo (apenas quando necessário)
+        function inicializarBancosExemplo() {
+            if (!usuarioAtual) return;
+            
+            console.log('🏦 DEBUG: Inicializando bancos de exemplo');
             bancos = [
                 { id: 1, nome: 'Nubank', contas: [
                     { id: 1001, numero: '1234-5', tipo: 'Conta Corrente' },
@@ -9743,7 +10405,57 @@
                     { id: 10001, numero: '0123-4', tipo: 'Conta Digital' }
                 ]}
             ];
-            localStorage.setItem('bancos', JSON.stringify(bancos));
+            salvarDados();
+        }
+        
+        // Função para inicializar investimentos de exemplo
+        function inicializarInvestimentosExemplo() {
+            if (!usuarioAtual) return;
+            
+            console.log('📈 DEBUG: Inicializando investimentos de exemplo');
+            investimentos = [
+                { id: 1, data: '2024-01-15', ativo: 'PETR4', quantidade: 100, preco: 35.50, tipo: 'Compra', corretora: 'XP Investimentos' },
+                { id: 2, data: '2024-01-20', ativo: 'VALE3', quantidade: 50, preco: 68.20, tipo: 'Compra', corretora: 'Rico' },
+                { id: 3, data: '2024-02-10', ativo: 'ITUB4', quantidade: 200, preco: 32.80, tipo: 'Compra', corretora: 'Clear' },
+                { id: 4, data: '2024-02-15', ativo: 'BBDC4', quantidade: 150, preco: 14.90, tipo: 'Compra', corretora: 'XP Investimentos' },
+                { id: 5, data: '2024-03-05', ativo: 'WEGE3', quantidade: 80, preco: 42.30, tipo: 'Compra', corretora: 'Rico' }
+            ];
+            salvarDados();
+        }
+        
+        // Função para inicializar ativos de exemplo
+        function inicializarAtivosExemplo() {
+            if (!usuarioAtual) return;
+            
+            console.log('🏢 DEBUG: Inicializando ativos de exemplo');
+            ativos = [
+                { id: 1, ticker: 'PETR4', nome: 'Petrobras PN', setor: 'Petróleo e Gás', tipo: 'Ação' },
+                { id: 2, ticker: 'VALE3', nome: 'Vale ON', setor: 'Mineração', tipo: 'Ação' },
+                { id: 3, ticker: 'ITUB4', nome: 'Itaú Unibanco PN', setor: 'Bancos', tipo: 'Ação' },
+                { id: 4, ticker: 'BBDC4', nome: 'Bradesco PN', setor: 'Bancos', tipo: 'Ação' },
+                { id: 5, ticker: 'WEGE3', nome: 'WEG ON', setor: 'Máquinas e Equipamentos', tipo: 'Ação' },
+                { id: 6, ticker: 'MGLU3', nome: 'Magazine Luiza ON', setor: 'Comércio', tipo: 'Ação' },
+                { id: 7, ticker: 'ABEV3', nome: 'Ambev ON', setor: 'Bebidas', tipo: 'Ação' },
+                { id: 8, ticker: 'BBAS3', nome: 'Banco do Brasil ON', setor: 'Bancos', tipo: 'Ação' }
+            ];
+            salvarDados();
+        }
+        
+        // Função para inicializar corretoras de exemplo
+        function inicializarCorretorasExemplo() {
+            if (!usuarioAtual) return;
+            
+            console.log('🏛️ DEBUG: Inicializando corretoras de exemplo');
+            corretoras = [
+                { id: 1, nome: 'XP Investimentos', taxa: 0.00, observacoes: 'Corretagem zero para ações' },
+                { id: 2, nome: 'Rico', taxa: 0.00, observacoes: 'Corretagem zero para ações' },
+                { id: 3, nome: 'Clear', taxa: 0.00, observacoes: 'Corretagem zero para ações' },
+                { id: 4, nome: 'Inter Invest', taxa: 0.00, observacoes: 'Corretagem zero para ações' },
+                { id: 5, nome: 'Nubank', taxa: 0.00, observacoes: 'Corretagem zero para ações' },
+                { id: 6, nome: 'BTG Pactual', taxa: 9.90, observacoes: 'Taxa fixa por operação' },
+                { id: 7, nome: 'Itaú Corretora', taxa: 18.90, observacoes: 'Taxa fixa por operação' }
+            ];
+            salvarDados();
         }
         
         // ===== FUNÇÕES DE COTAÇÕES =====
@@ -10249,8 +10961,26 @@
                 if (dadosImportados.investimentos) {
                     investimentos = dadosImportados.investimentos;
                 }
+                if (dadosImportados.dividendos) {
+                    dividendos = dadosImportados.dividendos;
+                }
+                if (dadosImportados.ativos) {
+                    ativos = dadosImportados.ativos;
+                }
+                if (dadosImportados.corretoras) {
+                    corretoras = dadosImportados.corretoras;
+                }
                 if (dadosImportados.saldoInicial !== undefined) {
                     saldoInicial = dadosImportados.saldoInicial;
+                }
+                if (dadosImportados.nextId !== undefined) {
+                    nextId = dadosImportados.nextId;
+                }
+                if (dadosImportados.nextInvestimentoId !== undefined) {
+                    nextInvestimentoId = dadosImportados.nextInvestimentoId;
+                }
+                if (dadosImportados.nextDividendoId !== undefined) {
+                    nextDividendoId = dadosImportados.nextDividendoId;
                 }
 
                 // Salvar no localStorage do servidor
@@ -10263,6 +10993,15 @@
                 aplicarFiltros();
                 carregarCategorias();
                 carregarBancos();
+                carregarTabelaBancos();
+                carregarCartoes();
+                carregarTabelaCartoes();
+                carregarInvestimentos();
+                carregarTabelaInvestimentos();
+                carregarDividendos();
+                carregarTabelaDividendos();
+                carregarAtivos();
+                carregarCorretoras();
 
                 alert('✅ Migração concluída com sucesso!\n\nDados importados e salvos no servidor web.');
 
@@ -10273,14 +11012,27 @@
 
         // Função para ser usada no arquivo HTML direto
         function exportarDadosParaMigracao() {
+            if (!usuarioAtual) {
+                alert('❌ Erro: Nenhum usuário logado. Faça login primeiro.');
+                return;
+            }
+            
+            const userPrefix = `financas_${usuarioAtual.email}_`;
+            
             const dados = {
-                lancamentos: JSON.parse(localStorage.getItem('financasLancamentos') || '[]'),
-                categorias: JSON.parse(localStorage.getItem('financasCategorias') || '[]'),
-                bancos: JSON.parse(localStorage.getItem('financasBancos') || '[]'),
-                cartoes: JSON.parse(localStorage.getItem('financasCartoes') || '[]'),
-                orcamentos: JSON.parse(localStorage.getItem('financasOrcamentos') || '[]'),
-                investimentos: JSON.parse(localStorage.getItem('financasInvestimentos') || '[]'),
-                saldoInicial: parseFloat(localStorage.getItem('financasSaldoInicial') || '0')
+                lancamentos: JSON.parse(localStorage.getItem(`${userPrefix}Lancamentos`) || '[]'),
+                categorias: JSON.parse(localStorage.getItem(`${userPrefix}Categorias`) || '[]'),
+                bancos: JSON.parse(localStorage.getItem(`${userPrefix}Bancos`) || '[]'),
+                cartoes: JSON.parse(localStorage.getItem(`${userPrefix}Cartoes`) || '[]'),
+                orcamentos: JSON.parse(localStorage.getItem(`${userPrefix}Orcamentos`) || '[]'),
+                investimentos: JSON.parse(localStorage.getItem(`${userPrefix}Investimentos`) || '[]'),
+                dividendos: JSON.parse(localStorage.getItem(`${userPrefix}Dividendos`) || '[]'),
+                ativos: JSON.parse(localStorage.getItem(`${userPrefix}Ativos`) || '[]'),
+                corretoras: JSON.parse(localStorage.getItem(`${userPrefix}Corretoras`) || '[]'),
+                saldoInicial: parseFloat(localStorage.getItem(`${userPrefix}SaldoInicial`) || '0'),
+                nextId: parseInt(localStorage.getItem(`${userPrefix}NextId`) || '1'),
+                nextInvestimentoId: parseInt(localStorage.getItem(`${userPrefix}NextInvestimentoId`) || '1'),
+                nextDividendoId: parseInt(localStorage.getItem(`${userPrefix}NextDividendoId`) || '1')
             };
 
             const dadosString = JSON.stringify(dados);

@@ -2,11 +2,12 @@
   "name": "web-financial",
   "version": "1.0.0",
   "description": "Sistema de Finanças Pessoais - Controle de Fluxo de Caixa",
-  "main": "index.html",
+  "main": "api/index.js",
   "scripts": {
-    "dev": "npx serve .",
-    "start": "npx serve .",
-    "preview": "npx serve ."
+    "dev": "node api/index.js",
+    "start": "node api/index.js",
+    "preview": "npx serve .",
+    "local": "npx serve ."
   },
   "keywords": [
     "finanças",
@@ -20,6 +21,12 @@
   ],
   "author": "Sistema Financeiro",
   "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^4.18.2",
+    "pg": "^8.11.3"
+  },
   "devDependencies": {
     "serve": "^14.2.1"
   },
