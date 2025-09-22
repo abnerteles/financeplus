@@ -4311,6 +4311,7 @@
             if (resultado.success) {
                 // Login bem-sucedido
                 usuarioAtual = { 
+                    id: resultado.user.id, // ✅ PRESERVAR ID DO BANCO
                     nome: resultado.user.name, 
                     email: resultado.user.email,
                     subscription_type: resultado.user.subscription_type || 'free',
@@ -4404,6 +4405,7 @@
             
             // Fazer login com o novo usuário
             usuarioAtual = { 
+                id: resultado.user.id, // ✅ PRESERVAR ID DO BANCO
                 nome: resultado.user.name, 
                 email: resultado.user.email,
                 subscription_type: resultado.user.subscription_type || 'free',
