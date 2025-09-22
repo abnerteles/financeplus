@@ -2502,6 +2502,35 @@
         let usuarios = [];
         let sessaoTemporaria = false; // Controla se a sessão deve ser encerrada ao fechar a página
         
+        // Função para identificar origem do usuário
+        function isUsuarioDoBanco() {
+            if (!usuarioAtual) return false;
+            // Se tem 'id' numérico, é do banco Neon
+            return usuarioAtual.hasOwnProperty('id') && typeof usuarioAtual.id === 'number';
+        }
+        
+        function getUsuarioInfo() {
+            if (!usuarioAtual) return { origem: 'nenhum', usuario: null };
+            
+            if (isUsuarioDoBanco()) {
+                return {
+                    origem: 'banco_neon',
+                    usuario: usuarioAtual,
+                    id_banco: usuarioAtual.id,
+                    subscription_centralizada: true,
+                    dados_financeiros: 'localStorage'
+                };
+            } else {
+                return {
+                    origem: 'localStorage',
+                    usuario: usuarioAtual,
+                    id_banco: null,
+                    subscription_centralizada: false,
+                    dados_financeiros: 'localStorage'
+                };
+            }
+        }
+        
         // Inicialização da aplicação
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Iniciando aplicação...');
@@ -2511,6 +2540,24 @@
             // Verificar se há usuário logado (carregarDadosSalvos será chamado dentro desta função se necessário)
             console.log('🔐 Verificando autenticação...');
             verificarAutenticacao();
+            
+            // Exemplo de uso das funções de identificação (após login)
+            setTimeout(() => {
+                if (usuarioAtual) {
+                    const info = getUsuarioInfo();
+                    console.log('👤 Informações do usuário:', info);
+                    
+                    if (isUsuarioDoBanco()) {
+                        console.log('🏦 Usuário autenticado via banco Neon');
+                        console.log('🆔 ID no banco:', usuarioAtual.id);
+                        console.log('📊 Subscription centralizada:', usuarioAtual.subscription_type);
+                    } else {
+                        console.log('💾 Usuário autenticado via localStorage');
+                        console.log('📧 Identificado por email:', usuarioAtual.email);
+                        console.log('⚠️ Subscription apenas local');
+                    }
+                }
+            }, 1000);
             // Configurar upload de foto
             configurarUploadFoto();
             
