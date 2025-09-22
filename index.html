@@ -4222,14 +4222,19 @@
         }
         
         async function loginUsuarioAPI(email, senha) {
+            console.log('🔍 Tentando login via API para:', email);
             const result = await apiRequest('/login', {
                 method: 'POST',
                 body: JSON.stringify({ email, password: senha })
             });
             
+            console.log('📊 Resultado da API:', result);
+            
             if (result.success) {
+                console.log('✅ Login via API bem-sucedido:', result.data.user);
                 return { success: true, user: result.data.user };
             } else {
+                console.log('⚠️ API falhou, usando localStorage. Erro:', result.error);
                 // Fallback para localStorage se API não estiver disponível
                 return loginUsuarioLocalStorage(email, senha);
             }
