@@ -17,10 +17,18 @@ if (process.env.DATABASE_URL) {
     databaseEnabled = true;
 }
 
+// Cache para evitar múltiplas inicializações em serverless
+let isInitialized = false;
+
 // Inicializar tabela de usuários
 async function initializeDatabase() {
     if (!databaseEnabled) {
         console.log('Banco de dados não configurado - usando apenas localStorage');
+        return;
+    }
+    
+    // Evitar múltiplas inicializações em serverless
+    if (isInitialized) {
         return;
     }
     
@@ -37,6 +45,7 @@ async function initializeDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+        isInitialized = true;
         console.log('Banco de dados inicializado com sucesso');
     } catch (error) {
         console.error('Erro ao inicializar banco:', error);
@@ -96,7 +105,7 @@ async function loginUser(email, password) {
     
     try {
         const result = await pool.query(
-            'SELECT id, name, email, password_hash, subscription_type, subscription_expires_at FROM users WHERE email = $1',
+            'SELECT id, name, email, password_hash, subscription_type, subscription_active FROM users WHERE email = $1',
             [email]
         );
 
@@ -110,10 +119,6 @@ async function loginUser(email, password) {
             return { success: false, error: 'Senha incorreta' };
         }
 
-        // Verificar se subscription ainda é válida
-        const now = new Date();
-        const isSubscriptionValid = user.subscription_expires_at && new Date(user.subscription_expires_at) > now;
-
         return {
             success: true,
             user: {
@@ -121,7 +126,7 @@ async function loginUser(email, password) {
                 name: user.name,
                 email: user.email,
                 subscription_type: user.subscription_type,
-                subscription_active: isSubscriptionValid || user.subscription_type === 'free'
+                subscription_active: user.subscription_active
             }
         };
     } catch (error) {
