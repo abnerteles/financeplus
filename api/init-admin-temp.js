@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
         const hashedPassword = Buffer.from(adminPassword).toString('base64');
 
         const insertQuery = `
-            INSERT INTO users (name, email, password, subscription_type, subscription_expires_at, created_at)
+            INSERT INTO users (name, email, password_hash, subscription_type, subscription_active, created_at)
             VALUES ($1, $2, $3, $4, $5, NOW())
             RETURNING id, name, email, subscription_type
         `;
@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
             adminEmail,
             hashedPassword,
             'premium',
-            new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 ano
+            true // subscription_active
         ]);
 
         const newAdmin = result.rows[0];
