@@ -62,19 +62,6 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
-        // Temporariamente usar login hardcoded para produção
-        if (email === 'admin@financeplus.com' && password === 'Admin123!') {
-            return res.json({
-                success: true,
-                user: {
-                    id: 3,
-                    name: 'Administrador',
-                    email: 'admin@financeplus.com',
-                    subscription: 'premium'
-                }
-            });
-        }
-
         // Tentar login com banco de dados
         const result = await loginUser(email, password);
         
