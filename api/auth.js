@@ -8,9 +8,9 @@ const bcrypt = require('bcryptjs');
 let pool = null;
 let databaseEnabled = false;
 
-if (process.env.DATABASE_URL) {
+if (process.env.POSTGRES_URL || process.env.DATABASE_URL) {
     pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
+        connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
         ssl: {
             rejectUnauthorized: false
         }

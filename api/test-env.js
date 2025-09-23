@@ -8,6 +8,9 @@ export default function handler(req, res) {
       DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
       DATABASE_URL_LENGTH: process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0,
       DATABASE_URL_PREFIX: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 20) + '...' : 'N/A',
+      POSTGRES_URL: process.env.POSTGRES_URL ? 'SET' : 'NOT SET',
+      POSTGRES_URL_LENGTH: process.env.POSTGRES_URL ? process.env.POSTGRES_URL.length : 0,
+      POSTGRES_URL_PREFIX: process.env.POSTGRES_URL ? process.env.POSTGRES_URL.substring(0, 20) + '...' : 'N/A',
       NODE_ENV: process.env.NODE_ENV || 'NOT SET',
       VERCEL: process.env.VERCEL || 'NOT SET',
       VERCEL_ENV: process.env.VERCEL_ENV || 'NOT SET'
