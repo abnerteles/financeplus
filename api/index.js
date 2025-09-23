@@ -61,12 +61,17 @@ app.post('/api/login', async (req, res) => {
         });
     }
 
-    const result = await loginUser(email, password);
-    
-    if (result.success) {
-        res.json(result);
-    } else {
-        res.status(401).json(result);
+    try {
+        const user = await loginUser(email, password);
+        res.json({
+            success: true,
+            user: user
+        });
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            error: error.message
+        });
     }
 });
 
