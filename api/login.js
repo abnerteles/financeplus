@@ -29,18 +29,26 @@ module.exports = async (req, res) => {
             });
         }
 
-        const result = await loginUser(email, password);
+        const user = await loginUser(email, password);
         
-        if (result.success) {
-            res.status(200).json(result);
-        } else {
-            res.status(401).json(result);
-        }
+        res.status(200).json({
+            success: true,
+            user: user
+        });
     } catch (error) {
         console.error('Erro no login:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Erro interno do servidor' 
-        });
+        
+        // Tratar erros específicos
+        if (error.message === 'Usuário não encontrado' || error.message === 'Senha incorreta') {
+            res.status(401).json({ 
+                success: false, 
+                error: error.message 
+            });
+        } else {
+            res.status(500).json({ 
+                success: false, 
+                error: 'Erro interno do servidor' 
+            });
+        }
     }
 }

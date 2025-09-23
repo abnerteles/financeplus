@@ -33,18 +33,34 @@ async function initializeDatabase() {
     }
     
     try {
+        // Criar tabela usuarios com campos atualizados
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS usuarios (
                 id SERIAL PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
+                nome VARCHAR(255),
                 email VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
+                senha VARCHAR(255) NOT NULL,
+                role VARCHAR(50) DEFAULT 'user',
                 subscription_type VARCHAR(50) DEFAULT 'free',
-                subscription_active BOOLEAN DEFAULT true,
+                subscription_status VARCHAR(50) DEFAULT 'active',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+        
+        // Migrar dados da tabela antiga se existir
+        try {
+            await pool.query(`
+                INSERT INTO usuarios (nome, email, senha, role, subscription_type, subscription_status, created_at, updated_at)
+                SELECT name, email, password_hash, 'user', subscription_type, 
+                       CASE WHEN subscription_active THEN 'active' ELSE 'inactive' END,
+                       created_at, updated_at
+                FROM users 
+                WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE usuarios.email = users.email)
+            `);
+        } catch (migrationError) {
+            // Tabela users pode não existir, ignorar erro
+        }
         isInitialized = true;
         console.log('Banco de dados inicializado com sucesso');
     } catch (error) {
@@ -66,72 +82,82 @@ function verifyPassword(password, hash) {
 // Registrar usuário
 async function registerUser(name, email, password) {
     if (!databaseEnabled) {
-        return { success: false, error: 'Banco de dados não configurado' };
+        throw new Error('Banco de dados não disponível');
     }
     
     try {
-        // Verificar se email já existe
+        // Verificar se usuário já existe
         const existingUser = await pool.query(
-            'SELECT id FROM users WHERE email = $1',
+            'SELECT id FROM usuarios WHERE email = $1',
             [email]
         );
-
+        
         if (existingUser.rows.length > 0) {
-            return { success: false, error: 'Email já cadastrado' };
+            throw new Error('Usuário já existe');
         }
-
-        // Criar usuário
-        const passwordHash = hashPassword(password);
+        
+        // Criar novo usuário
+        const hashedPassword = hashPassword(password);
         const result = await pool.query(
-            'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, subscription_type',
-            [name, email, passwordHash]
+            'INSERT INTO usuarios (nome, email, senha, role) VALUES ($1, $2, $3, $4) RETURNING id, nome, email, role, subscription_type, subscription_status',
+            [name, email, hashedPassword, 'user']
         );
-
-        return { 
-            success: true, 
-            user: result.rows[0] 
+        
+        const user = result.rows[0];
+        return {
+            id: user.id,
+            name: user.nome,
+            email: user.email,
+            role: user.role,
+            subscription: {
+                type: user.subscription_type,
+                status: user.subscription_status
+            }
         };
     } catch (error) {
-        console.error('Erro ao registrar usuário:', error);
-        return { success: false, error: 'Erro interno do servidor' };
+        console.error('Erro no registro:', error);
+        throw error;
     }
 }
 
 // Login de usuário
 async function loginUser(email, password) {
     if (!databaseEnabled) {
-        return { success: false, error: 'Banco de dados não configurado' };
+        throw new Error('Banco de dados não disponível');
     }
     
     try {
+        // Buscar usuário
         const result = await pool.query(
-            'SELECT id, name, email, password_hash, subscription_type, subscription_active FROM users WHERE email = $1',
+            'SELECT id, nome, email, senha, role, subscription_type, subscription_status FROM usuarios WHERE email = $1',
             [email]
         );
-
+        
         if (result.rows.length === 0) {
-            return { success: false, error: 'Usuário não encontrado' };
+            throw new Error('Usuário não encontrado');
         }
-
+        
         const user = result.rows[0];
         
-        if (!verifyPassword(password, user.password_hash)) {
-            return { success: false, error: 'Senha incorreta' };
+        // Verificar senha
+        if (!verifyPassword(password, user.senha)) {
+            throw new Error('Senha incorreta');
         }
-
+        
+        // Retornar dados do usuário (sem a senha)
         return {
-            success: true,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                subscription_type: user.subscription_type,
-                subscription_active: user.subscription_active
+            id: user.id,
+            name: user.nome,
+            email: user.email,
+            role: user.role,
+            subscription: {
+                type: user.subscription_type,
+                status: user.subscription_status
             }
         };
     } catch (error) {
-        console.error('Erro ao fazer login:', error);
-        return { success: false, error: 'Erro interno do servidor' };
+        console.error('Erro no login:', error);
+        throw error;
     }
 }
 

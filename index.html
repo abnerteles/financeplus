@@ -4228,10 +4228,9 @@
             });
             
             if (result.success) {
-                return { success: true, user: result.user };
+                return { success: true, user: result.data.user };
             } else {
-                // Fallback para localStorage se API não estiver disponível
-                return registrarUsuarioLocalStorage(nome, email, senha);
+                return { success: false, error: result.data?.error || 'Erro no registro' };
             }
         }
         
@@ -4245,17 +4244,11 @@
             console.log('📊 Resultado da API:', result);
             
             if (result.success) {
-                console.log('✅ Login via API bem-sucedido:', result.user);
-                return { success: true, user: result.user };
+                console.log('✅ Login via API bem-sucedido:', result.data.user);
+                return { success: true, user: result.data.user };
             } else {
-                console.log('💾 API indisponível. Usando modo offline...');
-                console.log('📋 Motivo:', result.error || 'Servidor temporariamente inacessível');
-                
-                // Mostrar notificação amigável ao usuário
-                mostrarAlerta('🌐 Modo offline ativado. Seus dados estão seguros!', 'info');
-                
-                // Fallback para localStorage se API não estiver disponível
-                return loginUsuarioLocalStorage(email, senha);
+                console.log('❌ Erro no login:', result.data?.error || 'Erro desconhecido');
+                return { success: false, error: result.data?.error || 'Erro no login' };
             }
         }
         

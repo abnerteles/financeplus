@@ -41,18 +41,26 @@ export default async function handler(req, res) {
             });
         }
 
-        const result = await registerUser(name, email, password);
+        const user = await registerUser(name, email, password);
         
-        if (result.success) {
-            res.status(201).json(result);
-        } else {
-            res.status(400).json(result);
-        }
+        res.status(201).json({
+            success: true,
+            user: user
+        });
     } catch (error) {
         console.error('Erro no registro:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Erro interno do servidor' 
-        });
+        
+        // Tratar erros específicos
+        if (error.message === 'Usuário já existe') {
+            res.status(400).json({ 
+                success: false, 
+                error: error.message 
+            });
+        } else {
+            res.status(500).json({ 
+                success: false, 
+                error: 'Erro interno do servidor' 
+            });
+        }
     }
 }
