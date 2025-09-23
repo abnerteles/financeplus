@@ -116,6 +116,43 @@ app.get('/api/test', (req, res) => {
     });
 });
 
+// Simple login test endpoint
+app.post('/api/login-test', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Email e senha são obrigatórios' 
+            });
+        }
+
+        // Test without database - just check credentials
+        if (email === 'admin@financeplus.com' && password === 'Admin123!') {
+            return res.json({
+                success: true,
+                user: {
+                    id: 1,
+                    name: 'Administrador',
+                    email: 'admin@financeplus.com',
+                    subscription: 'premium'
+                }
+            });
+        } else {
+            return res.status(401).json({
+                success: false,
+                error: 'Credenciais inválidas'
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Erro no servidor: ' + error.message
+        });
+    }
+});
+
 // Debug endpoint
 app.get('/api/debug', async (req, res) => {
     try {
