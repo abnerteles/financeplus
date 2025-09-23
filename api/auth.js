@@ -129,7 +129,7 @@ async function loginUser(email, password) {
     try {
         // Buscar usuário
         const result = await pool.query(
-            'SELECT id, nome, email, senha, role, subscription_type, subscription_status FROM usuarios WHERE email = $1',
+            'SELECT id, name, email, password_hash, subscription_type, subscription_active FROM users WHERE email = $1',
             [email]
         );
         
@@ -140,19 +140,18 @@ async function loginUser(email, password) {
         const user = result.rows[0];
         
         // Verificar senha
-        if (!verifyPassword(password, user.senha)) {
+        if (!verifyPassword(password, user.password_hash)) {
             throw new Error('Senha incorreta');
         }
         
         // Retornar dados do usuário (sem a senha)
         return {
             id: user.id,
-            name: user.nome,
+            name: user.name,
             email: user.email,
-            role: user.role,
             subscription: {
                 type: user.subscription_type,
-                status: user.subscription_status
+                active: user.subscription_active
             }
         };
     } catch (error) {
