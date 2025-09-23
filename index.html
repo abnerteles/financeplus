@@ -4201,7 +4201,7 @@
         // Detectar automaticamente a URL da API baseada no ambiente
         const API_BASE_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3001' 
-            : 'https://financeplus-gn0e95onb-abner-dos-santos-teles-projects.vercel.app';
+            : window.location.origin;
         
         async function apiRequest(endpoint, options = {}) {
             try {
