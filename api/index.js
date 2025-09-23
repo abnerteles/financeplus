@@ -102,9 +102,60 @@ app.put('/api/subscription/:userId', async (req, res) => {
     }
 });
 
-// Endpoint de health check
+// Endpoint de// Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint
+app.get('/api/debug', async (req, res) => {
+    try {
+        const sqlite3 = require('sqlite3').verbose();
+        const path = require('path');
+        const fs = require('fs');
+        
+        const dbPath = path.join(__dirname, 'database.db');
+        const db = new sqlite3.Database(dbPath);
+        
+        const debug = {
+            timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV || 'development',
+            database: {
+                path: dbPath,
+                exists: fs.existsSync(dbPath)
+            },
+            tables: {},
+            users: []
+        };
+        
+        // Verificar tabelas
+        db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+            if (err) {
+                debug.tables.error = err.message;
+            } else {
+                debug.tables.list = tables.map(t => t.name);
+            }
+            
+            // Verificar usuários
+            db.all("SELECT id, name, email, subscription FROM usuarios", (err, users) => {
+                if (err) {
+                    debug.users.error = err.message;
+                } else {
+                    debug.users.count = users.length;
+                    debug.users.list = users;
+                }
+                
+                db.close();
+                res.json(debug);
+            });
+        });
+        
+    } catch (error) {
+        res.status(500).json({
+            error: error.message,
+            stack: error.stack
+        });
+    }
 });
 
 app.listen(PORT, () => {
