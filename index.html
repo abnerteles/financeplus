@@ -766,12 +766,22 @@
                     // Adicionar classe ao body quando o modal de login é aberto
                     document.addEventListener('DOMContentLoaded', function() {
                         const loginModal = document.getElementById('loginModal');
-                        loginModal.addEventListener('shown.bs.modal', function() {
-                            document.body.classList.add('login-active');
-                        });
-                        loginModal.addEventListener('hidden.bs.modal', function() {
-                            document.body.classList.remove('login-active');
-                        });
+                        const registroModal = document.getElementById('registroModal');
+                        
+                        // Corrigir problema de aria-hidden com foco
+                        function fixAriaHidden(modal) {
+                            modal.addEventListener('shown.bs.modal', function() {
+                                modal.removeAttribute('aria-hidden');
+                                document.body.classList.add('login-active');
+                            });
+                            modal.addEventListener('hidden.bs.modal', function() {
+                                modal.setAttribute('aria-hidden', 'true');
+                                document.body.classList.remove('login-active');
+                            });
+                        }
+                        
+                        fixAriaHidden(loginModal);
+                        fixAriaHidden(registroModal);
                     });
                 </script>
                 <div class="modal-header">
@@ -791,7 +801,7 @@
                             <label for="login-email" class="form-label">Email</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                <input type="email" class="form-control" id="login-email" required>
+                                <input type="email" class="form-control" id="login-email" autocomplete="username" required>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -837,7 +847,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="registro-email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="registro-email" required>
+                            <input type="email" class="form-control" id="registro-email" autocomplete="email" required>
                         </div>
                         <div class="mb-3">
                             <label for="registro-senha" class="form-label">Senha</label>

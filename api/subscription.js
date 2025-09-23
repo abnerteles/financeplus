@@ -1,13 +1,13 @@
 // Vercel Serverless Function - Subscription Management
 const { initializeDatabase, checkSubscription, updateSubscription } = require('./auth');
 
-export default async function handler(req, res) {
-    // Configurar CORS
+module.exports = async (req, res) => {
+    // Headers CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    // Handle preflight
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Handle preflight requests
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }

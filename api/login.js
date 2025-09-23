@@ -1,22 +1,19 @@
 // Vercel Serverless Function - Login
 const { initializeDatabase, loginUser } = require('./auth');
 
-export default async function handler(req, res) {
-    // Configurar CORS
+module.exports = async (req, res) => {
+    // Headers CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    // Handle preflight
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Handle preflight requests
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
-
+    
     if (req.method !== 'POST') {
-        return res.status(405).json({ 
-            success: false, 
-            error: 'Método não permitido' 
-        });
+        return res.status(405).json({ error: 'Método não permitido' });
     }
 
     try {
