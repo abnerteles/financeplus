@@ -1,5 +1,4 @@
 const { Pool } = require('pg');
-const bcrypt = require('bcryptjs');
 
 // Configuração do banco Neon
 const pool = new Pool({
@@ -44,7 +43,7 @@ module.exports = async (req, res) => {
 
         // Criar usuário admin
         const adminPassword = 'Admin@123456';
-        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+        const hashedPassword = Buffer.from(adminPassword).toString('base64');
 
         const result = await pool.query(
             `INSERT INTO usuarios (email, senha, role, subscription_type, subscription_status, created_at) 
