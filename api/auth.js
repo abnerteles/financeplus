@@ -2,6 +2,7 @@
 // Mantém localStorage para dados financeiros, usa banco apenas para usuários e subscription
 
 const { Pool } = require('pg');
+const bcrypt = require('bcryptjs');
 
 // Configuração do banco Neon
 let pool = null;
@@ -69,14 +70,13 @@ async function initializeDatabase() {
     }
 }
 
-// Função para hash de senha (simples para este exemplo)
+// Função para hash de senha usando bcrypt
 function hashPassword(password) {
-    // Em produção, use bcrypt ou similar
-    return Buffer.from(password).toString('base64');
+    return bcrypt.hashSync(password, 10);
 }
 
 function verifyPassword(password, hash) {
-    return hashPassword(password) === hash;
+    return bcrypt.compareSync(password, hash);
 }
 
 // Registrar usuário
