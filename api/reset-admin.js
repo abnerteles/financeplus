@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
         const adminEmail = 'admin@financeplus.com';
         
         // Deletar usuário admin existente se houver
-        const deleteQuery = 'DELETE FROM users WHERE email = $1';
+        const deleteQuery = 'DELETE FROM usuarios WHERE email = $1';
         await pool.query(deleteQuery, [adminEmail]);
 
         // Criar usuário admin
@@ -36,9 +36,9 @@ module.exports = async (req, res) => {
         const hashedPassword = bcrypt.hashSync(adminPassword, 10);
 
         const insertQuery = `
-            INSERT INTO users (name, email, password_hash, subscription_type, subscription_active, created_at)
+            INSERT INTO usuarios (nome, email, senha, subscription_type, subscription_status, created_at)
             VALUES ($1, $2, $3, $4, $5, NOW())
-            RETURNING id, name, email, subscription_type
+            RETURNING id, nome, email, subscription_type
         `;
 
         const result = await pool.query(insertQuery, [
@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
             adminEmail,
             hashedPassword,
             'premium',
-            true // subscription_active
+            'active' // subscription_status
         ]);
 
         const newAdmin = result.rows[0];
