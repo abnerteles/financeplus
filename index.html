@@ -945,6 +945,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#" data-page="configuracoes"><i class="bi bi-gear me-1"></i> Configurações</a>
                     </li>
+                    <li class="nav-item" id="admin-menu-item" style="display: none;">
+                        <a class="nav-link" href="#" data-page="admin"><i class="bi bi-shield-check me-1"></i> Administração</a>
+                    </li>
                     <li class="nav-item d-flex align-items-center ms-3">
                         <img id="navbar-profile-photo" class="profile-photo me-2" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z'/%3E%3C/svg%3E" alt="Foto de Perfil" title="Clique para alterar foto" onclick="abrirModalPerfil()">
                         <span class="theme-icon"><i class="bi bi-sun-fill" id="theme-icon"></i></span>
@@ -1752,6 +1755,88 @@
                             O botão "Limpar Dados Inválidos" remove apenas contas e lançamentos corrompidos (como "undefined")<br>
                             O botão "Limpar Bancos de Teste" remove apenas os bancos com contas de teste, permitindo recadastrar suas contas reais
                         </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Página de Administração -->
+        <div id="admin" class="page">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2><i class="bi bi-shield-check me-2"></i> Administração do Sistema</h2>
+                    <p class="text-muted">Gerencie usuários e suas assinaturas</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3 col-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">Total de Usuários</h5>
+                            <h3 class="text-primary" id="total-usuarios">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">Assinaturas Premium</h5>
+                            <h3 class="text-success" id="total-premium">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">Assinaturas Gratuitas</h5>
+                            <h3 class="text-warning" id="total-free">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">Assinaturas Ativas</h5>
+                            <h3 class="text-info" id="total-ativas">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Usuários -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-people me-2"></i> Usuários do Sistema</h5>
+                    <button class="btn btn-primary btn-sm" onclick="carregarUsuarios()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Atualizar
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Assinatura</th>
+                                    <th>Status</th>
+                                    <th>Data de Criação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usuarios-lista">
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Carregando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -4068,6 +4153,11 @@
                 if (pageId === 'configuracoes') {
                     carregarConfiguracoes();
                 }
+                
+                // Se for a página de administração, carregar usuários
+                if (pageId === 'admin') {
+                    carregarUsuarios();
+                }
             } else {
                 console.error(`Página com ID ${pageId} não encontrada`);
                 // Fallback para dashboard se a página não existir
@@ -4507,6 +4597,11 @@
             // Atualizar nome do usuário na navbar
             const navbarBrand = document.querySelector('.navbar-brand');
             navbarBrand.innerHTML = `<i class="bi bi-cash-coin me-2"></i>Finanças de ${usuarioAtual.nome.split(' ')[0]}`;
+            
+            // Verificar se é admin e mostrar menu de administração
+            if (usuarioAtual.email === 'admin@financeplus.com') {
+                mostrarMenuAdmin();
+            }
             
             // Mostrar conteúdo principal da aplicação
             document.body.classList.remove('modal-open');
@@ -11206,6 +11301,173 @@
                 if (messageDiv) {
                     messageDiv.textContent = novaMensagem;
                 }
+            }
+        }
+
+        // ===== FUNÇÕES DE ADMINISTRAÇÃO =====
+        
+        function mostrarMenuAdmin() {
+            const adminMenuItem = document.getElementById('admin-menu-item');
+            if (adminMenuItem) {
+                adminMenuItem.style.display = 'block';
+            }
+        }
+
+        async function carregarUsuarios() {
+            try {
+                mostrarIndicadorCarregamento('Carregando usuários...');
+                
+                const response = await fetch('/api/admin/users', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'admin-email': usuarioAtual.email
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar usuários');
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    exibirUsuarios(data.users);
+                    atualizarEstatisticas(data.users);
+                } else {
+                    mostrarAlerta('Erro ao carregar usuários: ' + data.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                mostrarAlerta('Erro ao carregar usuários: ' + error.message, 'danger');
+            } finally {
+                ocultarIndicadorCarregamento();
+            }
+        }
+
+        function exibirUsuarios(usuarios) {
+            const tbody = document.getElementById('usuarios-lista');
+            
+            if (!usuarios || usuarios.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum usuário encontrado</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = usuarios.map(usuario => {
+                const dataFormatada = new Date(usuario.created_at).toLocaleDateString('pt-BR');
+                const statusBadge = usuario.subscription_active ? 
+                    '<span class="badge bg-success">Ativa</span>' : 
+                    '<span class="badge bg-danger">Inativa</span>';
+                
+                const subscriptionBadge = usuario.subscription_type === 'premium' ? 
+                    '<span class="badge bg-warning">Premium</span>' : 
+                    '<span class="badge bg-secondary">Gratuita</span>';
+
+                return `
+                    <tr>
+                        <td>${usuario.id}</td>
+                        <td>${usuario.name}</td>
+                        <td>${usuario.email}</td>
+                        <td>${subscriptionBadge}</td>
+                        <td>${statusBadge}</td>
+                        <td>${dataFormatada}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editarSubscription(${usuario.id}, '${usuario.subscription_type}', ${usuario.subscription_active})" title="Editar Assinatura">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="confirmarDeleteUsuario(${usuario.id}, '${usuario.name}')" title="Deletar Usuário">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function atualizarEstatisticas(usuarios) {
+            const totalUsuarios = usuarios.length;
+            const totalPremium = usuarios.filter(u => u.subscription_type === 'premium').length;
+            const totalFree = usuarios.filter(u => u.subscription_type === 'free').length;
+            const totalAtivas = usuarios.filter(u => u.subscription_active).length;
+
+            document.getElementById('total-usuarios').textContent = totalUsuarios;
+            document.getElementById('total-premium').textContent = totalPremium;
+            document.getElementById('total-free').textContent = totalFree;
+            document.getElementById('total-ativas').textContent = totalAtivas;
+        }
+
+        async function editarSubscription(userId, currentType, currentActive) {
+            const novoTipo = prompt(`Alterar tipo de assinatura do usuário ${userId}:\n\nTipo atual: ${currentType}\nStatus atual: ${currentActive ? 'Ativa' : 'Inativa'}\n\nDigite o novo tipo (free/premium):`, currentType);
+            
+            if (novoTipo === null) return; // Cancelou
+            
+            if (novoTipo !== 'free' && novoTipo !== 'premium') {
+                mostrarAlerta('Tipo de assinatura inválido. Use "free" ou "premium".', 'danger');
+                return;
+            }
+
+            const novoStatus = confirm('A assinatura deve estar ativa?');
+
+            try {
+                mostrarIndicadorCarregamento('Atualizando assinatura...');
+                
+                const response = await fetch(`/api/admin/users/${userId}/subscription`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        subscription_type: novoTipo,
+                        subscription_active: novoStatus
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    mostrarAlerta('Assinatura atualizada com sucesso!', 'success');
+                    carregarUsuarios(); // Recarregar lista
+                } else {
+                    mostrarAlerta('Erro ao atualizar assinatura: ' + data.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar assinatura:', error);
+                mostrarAlerta('Erro ao atualizar assinatura: ' + error.message, 'danger');
+            } finally {
+                ocultarIndicadorCarregamento();
+            }
+        }
+
+        async function confirmarDeleteUsuario(userId, userName) {
+            if (!confirm(`Tem certeza que deseja deletar o usuário "${userName}" (ID: ${userId})?\n\nEsta ação não pode ser desfeita!`)) {
+                return;
+            }
+
+            try {
+                mostrarIndicadorCarregamento('Deletando usuário...');
+                
+                const response = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    mostrarAlerta('Usuário deletado com sucesso!', 'success');
+                    carregarUsuarios(); // Recarregar lista
+                } else {
+                    mostrarAlerta('Erro ao deletar usuário: ' + data.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Erro ao deletar usuário:', error);
+                mostrarAlerta('Erro ao deletar usuário: ' + error.message, 'danger');
+            } finally {
+                ocultarIndicadorCarregamento();
             }
         }
 

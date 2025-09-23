@@ -63,13 +63,13 @@ app.post('/api/login', async (req, res) => {
         }
 
         // Tentar login com banco de dados
-        const result = await loginUser(email, password);
+        const user = await loginUser(email, password);
         
-        if (result.success) {
-            res.json(result);
-        } else {
-            res.status(401).json(result);
-        }
+        // Se chegou até aqui, o login foi bem-sucedido
+        res.json({
+            success: true,
+            user: user
+        });
     } catch (error) {
         // Fallback para admin hardcoded em caso de erro
         const { email, password } = req.body;
@@ -119,7 +119,36 @@ app.put('/api/subscription/:userId', async (req, res) => {
     }
 });
 
-// Endpoint de// Health check endpoint
+// Rotas de administração
+app.get('/api/admin/users', async (req, res) => {
+    const adminModule = require('./admin');
+    return adminModule(req, res);
+});
+
+app.put('/api/admin/users/:userId/subscription', async (req, res) => {
+    const adminModule = require('./admin');
+    const { subscription_type, subscription_active } = req.body;
+    req.body = { 
+        action: 'update_subscription', 
+        userId: req.params.userId,
+        subscriptionType: subscription_type,
+        subscriptionStatus: subscription_active ? 'active' : 'inactive',
+        adminEmail: 'admin@financeplus.com'
+    };
+    return adminModule(req, res);
+});
+
+app.delete('/api/admin/users/:userId', async (req, res) => {
+    const adminModule = require('./admin');
+    req.body = { 
+        action: 'delete_user', 
+        userId: req.params.userId,
+        adminEmail: 'admin@financeplus.com'
+    };
+    return adminModule(req, res);
+});
+
+// Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'OK', 

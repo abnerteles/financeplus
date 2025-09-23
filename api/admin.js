@@ -20,7 +20,15 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const { action, userId, subscriptionType, subscriptionStatus, adminEmail } = req.body;
+        // Para GET, pegar adminEmail do header, para outros métodos do body
+        let adminEmail, action, userId, subscriptionType, subscriptionStatus;
+        
+        if (req.method === 'GET') {
+            adminEmail = req.headers['admin-email'];
+            action = 'list_users';
+        } else {
+            ({ action, userId, subscriptionType, subscriptionStatus, adminEmail } = req.body);
+        }
 
         // Verificar se o usuário é admin
         const adminCheck = await pool.query(
