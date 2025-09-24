@@ -36,6 +36,55 @@ module.exports = async (req, res) => {
             ({ action, userId, subscriptionType, subscriptionStatus, adminEmail } = body);
         }
 
+        // Ação especial para inicializar admin
+        if (action === 'init_admin') {
+            // Verificar se já existe um admin
+            const checkAdmin = await pool.query(
+                'SELECT id FROM usuarios WHERE email = $1',
+                ['admin@financeplus.com']
+            );
+
+            if (checkAdmin.rows.length > 0) {
+                return res.status(200).json({ 
+                    success: true, 
+                    message: 'Usuário admin já existe',
+                    admin: {
+                        email: 'admin@financeplus.com',
+                        role: 'admin'
+                    }
+                });
+            }
+
+            // Criar usuário admin
+            const adminPassword = 'Admin@123456';
+            const hashedPassword = Buffer.from(adminPassword).toString('base64');
+
+            const result = await pool.query(
+                `INSERT INTO usuarios (email, senha, role, subscription_type, subscription_status, created_at) 
+                 VALUES ($1, $2, $3, $4, $5, NOW()) 
+                 RETURNING id, email, role, subscription_type, subscription_status`,
+                ['admin@financeplus.com', hashedPassword, 'admin', 'premium', 'active']
+            );
+
+            const admin = result.rows[0];
+
+            return res.status(201).json({
+                success: true,
+                message: 'Usuário admin criado com sucesso',
+                admin: {
+                    id: admin.id,
+                    email: admin.email,
+                    role: admin.role,
+                    subscription_type: admin.subscription_type,
+                    subscription_status: admin.subscription_status
+                },
+                credentials: {
+                    email: 'admin@financeplus.com',
+                    password: adminPassword
+                }
+            });
+        }
+
         // Verificar se o usuário é admin
         const adminCheck = await pool.query(
             'SELECT role FROM usuarios WHERE email = $1',
