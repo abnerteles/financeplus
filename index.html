@@ -6323,6 +6323,15 @@
             const bancoRelatorio = document.getElementById('banco-relatorio').value;
             const compararStatus = document.getElementById('comparar-status').checked;
             
+            // DEBUG: Log dos valores capturados
+            console.log('🔍 DEBUG GERAR RELATÓRIO:');
+            console.log('  Tipo:', tipoRelatorio);
+            console.log('  Data Início:', dataInicio);
+            console.log('  Data Fim:', dataFim);
+            console.log('  Status:', filtroStatus);
+            console.log('  Banco:', bancoRelatorio);
+            console.log('  Comparar:', compararStatus);
+            
             // Validar datas
             if (!dataInicio || !dataFim) {
                 alert('Por favor, selecione as datas de início e fim.');
@@ -6365,8 +6374,10 @@
                 gerarRelatorioComparativo(lancamentosFiltrados, tipoRelatorio, dataInicio, dataFim);
             } else {
                 // Gerar relatório de acordo com o tipo selecionado
+                console.log('🎯 DEBUG SWITCH - Entrando no switch com tipo:', tipoRelatorio);
                 switch(tipoRelatorio) {
                     case 'fluxo-caixa':
+                        console.log('✅ DEBUG SWITCH - Executando case fluxo-caixa');
                         gerarRelatorioFluxoCaixa(lancamentosFiltrados, dataInicio, dataFim);
                         break;
                         
@@ -6380,16 +6391,14 @@
                         
                     case 'investimentos':
                         gerarRelatorioInvestimentos(dataInicio, dataFim);
-                        break;
+                        // Investimentos usa sua própria função de estatísticas
+                        return; // Sair aqui para não chamar atualizarEstatisticasRelatorio
                         
                     default:
                         alert('Selecione um tipo de relatório válido.');
                         break;
                 }
             }
-            
-            // Atualizar estatísticas
-            atualizarEstatisticasRelatorio(lancamentosFiltrados);
         }
         
         function gerarRelatorioComparativo(lancamentos, tipoRelatorio, dataInicio, dataFim) {
@@ -6579,6 +6588,9 @@
         }
         
         function gerarRelatorioFluxoCaixa(lancamentos, dataInicio, dataFim) {
+            console.log('🚀 DEBUG FLUXO CAIXA - Função gerarRelatorioFluxoCaixa chamada');
+            console.log('  Parâmetros recebidos:', { lancamentos: lancamentos?.length, dataInicio, dataFim });
+            
             // Gerar dados do fluxo de caixa usando a função dedicada
             const dadosFluxoCaixa = gerarDadosFluxoCaixa(lancamentos, dataInicio, dataFim);
             
@@ -6630,6 +6642,9 @@
             
             // Exibir tabela detalhada
             exibirTabelaFluxoCaixa(dadosFluxoCaixa);
+            
+            // Atualizar estatísticas específicas do fluxo de caixa
+            atualizarEstatisticasFluxoCaixa(dadosFluxoCaixa, lancamentos);
             
             // Marcar que o fluxo de caixa não precisa mais ser atualizado
             fluxoCaixaPrecisaAtualizar = false;
@@ -6718,6 +6733,9 @@
                     }
                 ]);
             }
+            
+            // Atualizar estatísticas específicas de categoria
+            atualizarEstatisticasCategoria(lancamentos);
         }
         
         function gerarRelatorioTendencia(lancamentos, periodo) {
@@ -6778,6 +6796,9 @@
                     pointBackgroundColor: 'rgba(255, 159, 64, 1)'
                 }
             ]);
+            
+            // Atualizar estatísticas específicas de tendência
+            atualizarEstatisticasTendencia(lancamentos, dadosAgrupados);
         }
         
         function agruparLancamentosPorPeriodo(lancamentos, periodo) {
@@ -6848,6 +6869,13 @@
             // Ocultar tabela do fluxo de caixa
             document.getElementById('fluxo-caixa-tabela').style.display = 'none';
             
+            // Definir userPrefix para acessar dados do usuário
+            const userPrefix = usuarioAtual ? `financas_${usuarioAtual.email}_` : 'financas_default_';
+            
+            // Carregar dados dos investimentos e dividendos
+            const investimentos = JSON.parse(localStorage.getItem(`${userPrefix}Investimentos`)) || [];
+            const dividendos = JSON.parse(localStorage.getItem(`${userPrefix}Dividendos`)) || [];
+            
             if (investimentos.length === 0) {
                 alert('Não há investimentos cadastrados para gerar o relatório.');
                 return;
@@ -6890,87 +6918,45 @@
             }]);
             
             // Atualizar estatísticas específicas de investimentos
-            atualizarEstatisticasInvestimentos(valorTotalInvestido, totalDividendos);
+            atualizarEstatisticasInvestimentos(valorTotalInvestido, totalDividendos, investimentos);
         }
         
-        function atualizarEstatisticasInvestimentos(valorTotal, totalDividendos) {
-            const estatisticasDiv = document.getElementById('estatisticas-relatorio');
+        function atualizarEstatisticasInvestimentos(valorTotal, totalDividendos, investimentos) {
+            const estatisticasDiv = document.getElementById('relatorio-estatisticas');
             const rentabilidade = valorTotal > 0 ? (totalDividendos / valorTotal) * 100 : 0;
             
+            // Usar o mesmo formato de tabela dos outros relatórios
             estatisticasDiv.innerHTML = `
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-primary">Patrimônio Total</h5>
-                                <h3 class="card-text">${valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-success">Dividendos Recebidos</h5>
-                                <h3 class="card-text">${totalDividendos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-info">Rentabilidade</h5>
-                                <h3 class="card-text ${rentabilidade >= 0 ? 'text-success' : 'text-danger'}">${rentabilidade.toFixed(2)}%</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-warning">Total de Ativos</h5>
-                                <h3 class="card-text">${investimentos.length}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">Resumo por Categoria</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>Categoria</th>
-                                                <th>Quantidade de Ativos</th>
-                                                <th>Valor Investido</th>
-                                                <th>Participação</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${Object.entries(investimentos.reduce((acc, inv) => {
-                                                if (!acc[inv.categoria]) {
-                                                    acc[inv.categoria] = { quantidade: 0, valor: 0 };
-                                                }
-                                                acc[inv.categoria].quantidade++;
-                                                acc[inv.categoria].valor += inv.valorTotal;
-                                                return acc;
-                                            }, {})).map(([categoria, dados]) => `
-                                                <tr>
-                                                    <td>${categoria}</td>
-                                                    <td>${dados.quantidade}</td>
-                                                    <td>${dados.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                                    <td>${((dados.valor / valorTotal) * 100).toFixed(1)}%</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <p>Estatísticas do Relatório de Investimentos</p>
+                <div class="mt-3">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Patrimônio Total:</td>
+                                <td>${valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                            <tr>
+                                <td>Dividendos Recebidos:</td>
+                                <td>${totalDividendos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                            <tr>
+                                <td>Rentabilidade:</td>
+                                <td class="${rentabilidade >= 0 ? 'text-success' : 'text-danger'}">${rentabilidade.toFixed(2)}%</td>
+                            </tr>
+                            <tr>
+                                <td>Total de Ativos:</td>
+                                <td>${investimentos.length}</td>
+                            </tr>
+                            <tr>
+                                <td>Valor Médio por Ativo:</td>
+                                <td>${investimentos.length > 0 ? (valorTotal / investimentos.length).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00'}</td>
+                            </tr>
+                            <tr>
+                                <td>Yield Médio:</td>
+                                <td class="${rentabilidade >= 0 ? 'text-success' : 'text-danger'}">${rentabilidade.toFixed(2)}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             `;
         }
@@ -7077,6 +7063,253 @@
             return cores;
         }
         
+        function atualizarEstatisticasFluxoCaixa(dadosFluxoCaixa, lancamentos) {
+            const estatisticasDiv = document.getElementById('relatorio-estatisticas');
+            
+            // Calcular estatísticas específicas do fluxo de caixa
+            const periodos = dadosFluxoCaixa.periodos;
+            const dados = dadosFluxoCaixa.dados;
+            
+            let saldoInicial = 0;
+            let saldoFinal = 0;
+            let maiorEntradaPeriodo = 0;
+            let maiorSaidaPeriodo = 0;
+            let periodoMaiorSaldo = '';
+            let maiorSaldoPeriodo = -Infinity;
+            
+            periodos.forEach(periodo => {
+                const dadosPeriodo = dados[periodo];
+                if (dadosPeriodo.saldoFinal > maiorSaldoPeriodo) {
+                    maiorSaldoPeriodo = dadosPeriodo.saldoFinal;
+                    periodoMaiorSaldo = periodo;
+                }
+                if (dadosPeriodo.entradas > maiorEntradaPeriodo) {
+                    maiorEntradaPeriodo = dadosPeriodo.entradas;
+                }
+                if (dadosPeriodo.saidas > maiorSaidaPeriodo) {
+                    maiorSaidaPeriodo = dadosPeriodo.saidas;
+                }
+            });
+            
+            if (periodos.length > 0) {
+                saldoInicial = dados[periodos[0]].saldoInicial;
+                saldoFinal = dados[periodos[periodos.length - 1]].saldoFinal;
+            }
+            
+            const variacao = saldoFinal - saldoInicial;
+            const percentualVariacao = saldoInicial !== 0 ? (variacao / Math.abs(saldoInicial)) * 100 : 0;
+            
+            estatisticasDiv.innerHTML = `
+                <p>Estatísticas do Fluxo de Caixa</p>
+                <div class="mt-3">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Saldo Inicial:</td>
+                                <td>${saldoInicial.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                            <tr>
+                                <td>Saldo Final:</td>
+                                <td class="${saldoFinal >= 0 ? 'text-success' : 'text-danger'}">${saldoFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                            <tr>
+                                <td>Variação no Período:</td>
+                                <td class="${variacao >= 0 ? 'text-success' : 'text-danger'}">${variacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (${percentualVariacao.toFixed(1)}%)</td>
+                            </tr>
+                            <tr>
+                                <td>Maior Entrada do Período:</td>
+                                <td class="text-success">${maiorEntradaPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                            <tr>
+                                <td>Maior Saída do Período:</td>
+                                <td class="text-danger">${maiorSaidaPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                            <tr>
+                                <td>Período com Maior Saldo:</td>
+                                <td>${periodoMaiorSaldo} (${maiorSaldoPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function atualizarEstatisticasCategoria(lancamentos) {
+            const estatisticasDiv = document.getElementById('relatorio-estatisticas');
+            
+            // Agrupar por categoria
+            const categorias = {};
+            let totalEntradas = 0;
+            let totalSaidas = 0;
+            
+            lancamentos.forEach(lancamento => {
+                const categoria = lancamento.categoria;
+                if (!categorias[categoria]) {
+                    categorias[categoria] = { entradas: 0, saidas: 0, transacoes: 0 };
+                }
+                
+                if (lancamento.tipo === 'entrada') {
+                    categorias[categoria].entradas += lancamento.valor;
+                    totalEntradas += lancamento.valor;
+                } else {
+                    categorias[categoria].saidas += lancamento.valor;
+                    totalSaidas += lancamento.valor;
+                }
+                categorias[categoria].transacoes++;
+            });
+            
+            // Encontrar categoria com mais gastos e mais receitas
+            let categoriaMaisGastos = '';
+            let valorMaisGastos = 0;
+            let categoriaMaisReceitas = '';
+            let valorMaisReceitas = 0;
+            let categoriaMaisTransacoes = '';
+            let maisTransacoes = 0;
+            
+            Object.entries(categorias).forEach(([categoria, dados]) => {
+                if (dados.saidas > valorMaisGastos) {
+                    categoriaMaisGastos = categoria;
+                    valorMaisGastos = dados.saidas;
+                }
+                if (dados.entradas > valorMaisReceitas) {
+                    categoriaMaisReceitas = categoria;
+                    valorMaisReceitas = dados.entradas;
+                }
+                if (dados.transacoes > maisTransacoes) {
+                    categoriaMaisTransacoes = categoria;
+                    maisTransacoes = dados.transacoes;
+                }
+            });
+            
+            const numCategorias = Object.keys(categorias).length;
+            const mediaGastosPorCategoria = numCategorias > 0 ? totalSaidas / numCategorias : 0;
+            
+            estatisticasDiv.innerHTML = `
+                <p>Estatísticas por Categoria</p>
+                <div class="mt-3">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Total de Categorias:</td>
+                                <td>${numCategorias}</td>
+                            </tr>
+                            <tr>
+                                <td>Categoria com Mais Gastos:</td>
+                                <td>${categoriaMaisGastos} (${valorMaisGastos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</td>
+                            </tr>
+                            <tr>
+                                <td>Categoria com Mais Receitas:</td>
+                                <td>${categoriaMaisReceitas} (${valorMaisReceitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</td>
+                            </tr>
+                            <tr>
+                                <td>Categoria Mais Ativa:</td>
+                                <td>${categoriaMaisTransacoes} (${maisTransacoes} transações)</td>
+                            </tr>
+                            <tr>
+                                <td>Média de Gastos por Categoria:</td>
+                                <td>${mediaGastosPorCategoria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                            <tr>
+                                <td>Saldo Total:</td>
+                                <td class="${(totalEntradas - totalSaidas) >= 0 ? 'text-success' : 'text-danger'}">${(totalEntradas - totalSaidas).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function atualizarEstatisticasTendencia(lancamentos, dadosAgrupados) {
+            const estatisticasDiv = document.getElementById('relatorio-estatisticas');
+            
+            // Calcular estatísticas de tendência
+            const periodos = Object.keys(dadosAgrupados);
+            const saldos = periodos.map(periodo => {
+                const dados = dadosAgrupados[periodo];
+                return dados.entradas - dados.saidas;
+            });
+            
+            let tendencia = 'Estável';
+            let crescimentoMedio = 0;
+            let volatilidade = 0;
+            let melhorPeriodo = '';
+            let piorPeriodo = '';
+            let melhorSaldo = -Infinity;
+            let piorSaldo = Infinity;
+            
+            if (saldos.length > 1) {
+                // Calcular crescimento médio
+                const crescimentos = [];
+                for (let i = 1; i < saldos.length; i++) {
+                    const crescimento = saldos[i] - saldos[i-1];
+                    crescimentos.push(crescimento);
+                }
+                crescimentoMedio = crescimentos.reduce((a, b) => a + b, 0) / crescimentos.length;
+                
+                // Determinar tendência
+                if (crescimentoMedio > 100) {
+                    tendencia = 'Crescimento';
+                } else if (crescimentoMedio < -100) {
+                    tendencia = 'Declínio';
+                }
+                
+                // Calcular volatilidade (desvio padrão dos saldos)
+                const mediaSaldos = saldos.reduce((a, b) => a + b, 0) / saldos.length;
+                const variancia = saldos.reduce((acc, saldo) => acc + Math.pow(saldo - mediaSaldos, 2), 0) / saldos.length;
+                volatilidade = Math.sqrt(variancia);
+            }
+            
+            // Encontrar melhor e pior período
+            saldos.forEach((saldo, index) => {
+                if (saldo > melhorSaldo) {
+                    melhorSaldo = saldo;
+                    melhorPeriodo = periodos[index];
+                }
+                if (saldo < piorSaldo) {
+                    piorSaldo = saldo;
+                    piorPeriodo = periodos[index];
+                }
+            });
+            
+            const saldoAtual = saldos[saldos.length - 1] || 0;
+            const saldoAnterior = saldos[saldos.length - 2] || 0;
+            const variacaoRecente = saldoAtual - saldoAnterior;
+            
+            estatisticasDiv.innerHTML = `
+                <p>Estatísticas de Tendência</p>
+                <div class="mt-3">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Tendência Geral:</td>
+                                <td class="${tendencia === 'Crescimento' ? 'text-success' : tendencia === 'Declínio' ? 'text-danger' : 'text-warning'}">${tendencia}</td>
+                            </tr>
+                            <tr>
+                                <td>Crescimento Médio por Período:</td>
+                                <td class="${crescimentoMedio >= 0 ? 'text-success' : 'text-danger'}">${crescimentoMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                            <tr>
+                                <td>Variação Recente:</td>
+                                <td class="${variacaoRecente >= 0 ? 'text-success' : 'text-danger'}">${variacaoRecente.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                            <tr>
+                                <td>Melhor Período:</td>
+                                <td class="text-success">${melhorPeriodo} (${melhorSaldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</td>
+                            </tr>
+                            <tr>
+                                <td>Pior Período:</td>
+                                <td class="text-danger">${piorPeriodo} (${piorSaldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</td>
+                            </tr>
+                            <tr>
+                                <td>Volatilidade:</td>
+                                <td>${volatilidade.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
         function atualizarEstatisticasRelatorio(lancamentos) {
             // Calcular estatísticas
             let totalEntradas = 0;
@@ -7593,6 +7826,7 @@
             
             // Calcular saldo acumulado de todos os lançamentos anteriores ao período
             // Garantir que estamos usando o saldo inicial correto do localStorage
+            const userPrefix = usuarioAtual ? `financas_${usuarioAtual.email}_` : 'financas_default_';
             const saldoInicialSalvo = localStorage.getItem(`${userPrefix}SaldoInicial`);
             const saldoInicialAtual = saldoInicialSalvo ? parseFloat(saldoInicialSalvo) : 0;
             let saldoAcumulado = saldoInicialAtual;
@@ -10863,166 +11097,7 @@
         }
 
         // ========================================
-        // 🔒 PROTEÇÃO CONTRA DEVTOOLS
-        // ========================================
-        
-        // Detectar se DevTools está aberto
-        let devtools = {
-            open: false,
-            orientation: null
-        };
-
-        const threshold = 160;
-
-        setInterval(() => {
-            if (window.outerHeight - window.innerHeight > threshold || 
-                window.outerWidth - window.innerWidth > threshold) {
-                if (!devtools.open) {
-                    devtools.open = true;
-                    console.clear();
-                    
-                    // Recarregar página silenciosamente
-                    window.location.reload();
-                }
-            } else {
-                devtools.open = false;
-            }
-        }, 500);
-
-        // Bloquear teclas de atalho do DevTools
-        document.addEventListener('keydown', function(e) {
-            // F12
-            if (e.key === 'F12') {
-                e.preventDefault();
-                e.stopPropagation();
-                console.clear();
-                return false;
-            }
-            
-            // Ctrl+Shift+I (DevTools)
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                e.preventDefault();
-                e.stopPropagation();
-                console.clear();
-                return false;
-            }
-            
-            // Ctrl+Shift+J (Console)
-            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-                e.preventDefault();
-                e.stopPropagation();
-                console.clear();
-                return false;
-            }
-            
-            // Ctrl+U (View Source)
-            if (e.ctrlKey && e.key === 'u') {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-            
-            // Ctrl+Shift+C (Element Selector)
-            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-                e.preventDefault();
-                e.stopPropagation();
-                console.clear();
-                return false;
-            }
-            
-            // Ctrl+S (Save Page)
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        });
-
-        // Bloquear menu de contexto (botão direito)
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        });
-
-        // Bloquear seleção de texto
-        document.addEventListener('selectstart', function(e) {
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // Bloquear arrastar elementos
-        document.addEventListener('dragstart', function(e) {
-            e.preventDefault();
-            return false;
-        });
-
-        // Limpar console periodicamente
-        setInterval(() => {
-            console.clear();
-        }, 1000);
-
-        // Detectar tentativas de debug
-        let startTime = new Date();
-        debugger;
-        let endTime = new Date();
-        if (endTime - startTime > 100) {
-            console.clear();
-            alert('🚫 Debugger detectado! A página será recarregada.');
-            window.location.reload();
-        }
-
-        // Sobrescrever console para bloquear logs
-        const originalLog = console.log;
-        const originalError = console.error;
-        const originalWarn = console.warn;
-        const originalInfo = console.info;
-
-        console.log = function() {
-            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('🚫')) {
-                originalLog.apply(console, arguments);
-            }
-        };
-        
-        console.error = function() {};
-        console.warn = function() {};
-        console.info = function() {};
-
-        // Bloquear abertura de novas abas/janelas com DevTools
-        const originalOpen = window.open;
-        window.open = function() {
-            alert('🚫 Abertura de novas janelas está desabilitada por segurança!');
-            return null;
-        };
-
-        // Detectar mudanças no DOM que podem indicar tentativas de bypass
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(function(node) {
-                        if (node.nodeType === 1) { // Element node
-                            // Verificar se é um script malicioso
-                            if (node.tagName === 'SCRIPT' && !node.src.includes('cdn.jsdelivr.net') && 
-                                !node.src.includes('cdnjs.cloudflare.com') && !node.src.includes('stackpath.bootstrapcdn.com')) {
-                                node.remove();
-                                console.clear();
-                                alert('🚫 Script não autorizado removido!');
-                            }
-                        }
-                    });
-                }
-            });
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-
-        // Limpeza silenciosa do console
-        console.clear();
+        // 🔧 MODO DESENVOLVIMENTO - DevTools liberado para debugging
 
     </script>
 </body>
