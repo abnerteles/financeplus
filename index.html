@@ -9908,9 +9908,8 @@
         async function atualizarCotacoes() {
             console.log('🔄 Iniciando atualização de cotações...');
             
-            // Limpar cotações antigas para forçar nova busca
-            console.log('🧹 Limpando cotações antigas do cache...');
-            localStorage.removeItem('cotacoesAtuais');
+            // Carregar cotações existentes (não limpar para preservar dados funcionais)
+            console.log('📋 Carregando cotações existentes...');
             
             const btnAtualizar = document.getElementById('btnAtualizarCotacoes');
             const ativos = obterAtivosUnicos();
