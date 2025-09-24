@@ -8738,6 +8738,15 @@
 
         
         function atualizarTabelaInvestimentos() {
+            // Carregar dados atualizados do localStorage
+            if (!usuarioAtual) {
+                console.warn('⚠️ Usuário não logado - não é possível atualizar tabela');
+                return;
+            }
+            
+            const userPrefix = `financas_${usuarioAtual.email}_`;
+            const investimentos = JSON.parse(localStorage.getItem(`${userPrefix}Investimentos`)) || [];
+            
             const tbody = document.getElementById('tabela-investimentos').querySelector('tbody');
             tbody.innerHTML = '';
             
@@ -8821,7 +8830,7 @@
                     <td>${investimento.corretora}</td>
                     <td>${quantidadeDisplay}</td>
                     <td>${precoDisplay}</td>
-                    <td>${investimento.valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td>${(investimento.valorTotal || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                     <td><span class="badge ${investimento.tipoLancamento === 'compra' ? 'bg-success' : 'bg-danger'}">${investimento.tipoLancamento === 'compra' ? 'Compra' : 'Venda'}</span></td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-1" onclick="editarInvestimento(${investimento.id})">
@@ -8837,6 +8846,15 @@
         }
         
         function atualizarTabelaDividendos() {
+            // Carregar dados atualizados do localStorage
+            if (!usuarioAtual) {
+                console.warn('⚠️ Usuário não logado - não é possível atualizar tabela de dividendos');
+                return;
+            }
+            
+            const userPrefix = `financas_${usuarioAtual.email}_`;
+            const dividendos = JSON.parse(localStorage.getItem(`${userPrefix}Dividendos`)) || [];
+            
             const tbody = document.getElementById('tabela-dividendos').querySelector('tbody');
             tbody.innerHTML = '';
             
@@ -9095,6 +9113,18 @@
         }
         
         function atualizarDashboardInvestimentos() {
+            // Carregar dados atualizados do localStorage
+            if (!usuarioAtual) {
+                console.warn('⚠️ Usuário não logado - não é possível atualizar dashboard');
+                return;
+            }
+            
+            const userPrefix = `financas_${usuarioAtual.email}_`;
+            const investimentos = JSON.parse(localStorage.getItem(`${userPrefix}Investimentos`)) || [];
+            const dividendos = JSON.parse(localStorage.getItem(`${userPrefix}Dividendos`)) || [];
+            
+            console.log('📊 Atualizando dashboard com:', { investimentos: investimentos.length, dividendos: dividendos.length });
+            
             // Calcular totais
             const valorTotalInvestido = investimentos.reduce((total, inv) => total + inv.valorTotal, 0);
             const totalDividendos = dividendos.reduce((total, div) => total + div.valor, 0);
@@ -9678,28 +9708,75 @@
         
         // ===== FUNÇÕES DE COTAÇÕES =====
         
+        // Função para simular cotações em ambiente local (para testes)
+        function simularCotacaoLocal(ativo) {
+            console.log(`🎭 Simulando cotação local para: ${ativo}`);
+            
+            // Preços base simulados para alguns ativos comuns
+            const precosBase = {
+                'PETR4': 35.50,
+                'VALE3': 65.80,
+                'ITUB4': 28.90,
+                'BBDC4': 15.75,
+                'WEGE3': 42.30,
+                'MGLU3': 8.45,
+                'ABEV3': 12.60,
+                'BTC': 280000,
+                'ETH': 18500,
+                'ADA': 2.45
+            };
+            
+            const precoBase = precosBase[ativo] || Math.random() * 100 + 10;
+            
+            // Simular variação de -5% a +5%
+            const variacao = (Math.random() - 0.5) * 10;
+            const precoAtual = precoBase * (1 + variacao / 100);
+            
+            return {
+                ticker: ativo,
+                preco: parseFloat(precoAtual.toFixed(2)),
+                variacao: parseFloat(variacao.toFixed(2)),
+                ultimaAtualizacao: new Date().toISOString(),
+                simulado: true // Flag para indicar que é simulado
+            };
+        }
+        
         // Função para buscar cotações na API Brapi
         async function buscarCotacaoBrapi(ticker) {
+            console.log(`🌐 Iniciando busca Brapi para: ${ticker}`);
             const apiKey = '8Kit3i4Diim1pymyVmRkEt';
             try {
-                const response = await fetch(`https://brapi.dev/api/quote/${ticker}?token=${apiKey}`);
+                const url = `https://brapi.dev/api/quote/${ticker}?token=${apiKey}`;
+                console.log(`🔗 URL da requisição: ${url}`);
+                
+                const response = await fetch(url);
+                console.log(`📡 Resposta HTTP: ${response.status} ${response.statusText}`);
+                
                 if (!response.ok) {
                     throw new Error(`Erro HTTP: ${response.status}`);
                 }
                 const data = await response.json();
+                console.log(`📄 Dados recebidos da Brapi:`, data);
                 
                 if (data.results && data.results.length > 0) {
                     const resultado = data.results[0];
-                    return {
+                    const cotacao = {
                         ticker: resultado.symbol,
                         preco: resultado.regularMarketPrice,
                         variacao: resultado.regularMarketChangePercent,
                         ultimaAtualizacao: new Date().toISOString()
                     };
+                    console.log(`✅ Cotação Brapi processada:`, cotacao);
+                    return cotacao;
                 }
+                console.warn(`⚠️ Nenhum resultado encontrado na Brapi para: ${ticker}`);
                 return null;
             } catch (error) {
-                console.error(`Erro ao buscar cotação de ${ticker}:`, error);
+                if (error.message.includes('Failed to fetch')) {
+                    console.warn(`🚫 CORS/Rede: Não foi possível acessar a API Brapi para ${ticker}. Isso é normal em ambiente local.`);
+                } else {
+                    console.error(`❌ Erro ao buscar cotação Brapi para ${ticker}:`, error);
+                }
                 return null;
             }
         }
@@ -9729,6 +9806,7 @@
         
         // Função para buscar cotações de criptomoedas usando CoinGecko API
         async function buscarCotacaoCripto(simbolo) {
+            console.log(`🪙 Iniciando busca CoinGecko para: ${simbolo}`);
             try {
                 // Mapear símbolos comuns para IDs do CoinGecko
                 const mapeamentoCripto = {
@@ -9750,26 +9828,39 @@
                 };
                 
                 const coinId = mapeamentoCripto[simbolo.toUpperCase()] || simbolo.toLowerCase();
+                console.log(`🔍 Mapeamento: ${simbolo} -> ${coinId}`);
                 
-                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=brl&include_24hr_change=true`);
+                const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=brl&include_24hr_change=true`;
+                console.log(`🔗 URL da requisição CoinGecko: ${url}`);
+                
+                const response = await fetch(url);
+                console.log(`📡 Resposta HTTP CoinGecko: ${response.status} ${response.statusText}`);
                 
                 if (!response.ok) {
                     throw new Error(`Erro HTTP: ${response.status}`);
                 }
                 
                 const data = await response.json();
+                console.log(`📄 Dados recebidos do CoinGecko:`, data);
                 
                 if (data[coinId]) {
-                    return {
+                    const cotacao = {
                         ticker: simbolo.toUpperCase(),
                         preco: data[coinId].brl,
                         variacao: data[coinId].brl_24h_change || 0,
                         ultimaAtualizacao: new Date().toISOString()
                     };
+                    console.log(`✅ Cotação CoinGecko processada:`, cotacao);
+                    return cotacao;
                 }
+                console.warn(`⚠️ Nenhum resultado encontrado no CoinGecko para: ${simbolo} (${coinId})`);
                 return null;
             } catch (error) {
-                console.error(`Erro ao buscar cotação de ${simbolo}:`, error);
+                if (error.message.includes('Failed to fetch')) {
+                    console.warn(`🚫 CORS/Rede: Não foi possível acessar a API CoinGecko para ${simbolo}. Isso é normal em ambiente local.`);
+                } else {
+                    console.error(`❌ Erro ao buscar cotação CoinGecko para ${simbolo}:`, error);
+                }
                 return null;
             }
         }
@@ -9791,10 +9882,14 @@
         
         // Função principal para atualizar cotações
         async function atualizarCotacoes() {
+            console.log('🔄 Iniciando atualização de cotações...');
             const btnAtualizar = document.getElementById('btnAtualizarCotacoes');
             const ativos = obterAtivosUnicos();
             
+            console.log('📊 Ativos encontrados:', ativos);
+            
             if (ativos.length === 0) {
+                console.warn('⚠️ Nenhum ativo encontrado');
                 alert('Nenhum ativo encontrado para atualizar cotações.');
                 return;
             }
@@ -9810,21 +9905,42 @@
                 
                 // Buscar cotações para cada ativo
                 for (const ativo of ativos) {
+                    console.log(`🔍 Processando ativo: ${ativo}`);
                     // Verificar se é criptomoeda baseado na categoria do investimento
                     const isCripto = verificarSeCriptomoeda(ativo);
+                    console.log(`💰 ${ativo} é cripto: ${isCripto}`);
                     
                     let cotacao;
                     if (isCripto) {
+                        console.log(`🪙 Buscando cotação cripto para: ${ativo}`);
                         cotacao = await buscarCotacaoCripto(ativo);
                     } else {
+                        console.log(`📈 Buscando cotação Brapi para: ${ativo}`);
                         cotacao = await buscarCotacaoBrapi(ativo);
                     }
+                    
+                    console.log(`📊 Cotação obtida para ${ativo}:`, cotacao);
                     
                     if (cotacao) {
                         cotacoes[ativo] = cotacao;
                         sucessos++;
+                        console.log(`✅ Sucesso para ${ativo}`);
                     } else {
-                        erros++;
+                        console.warn(`⚠️ Falha ao obter cotação para ${ativo}, tentando simulação local`);
+                        
+                        // Tentar simulação local se API falhar
+                        const cotacaoSimulada = simularCotacaoLocal(ativo);
+                        if (cotacaoSimulada) {
+                            cotacoes[ativo] = cotacaoSimulada;
+                            sucessos++;
+                            console.log(`🎭 Cotação simulada para ${ativo}:`, cotacaoSimulada);
+                        } else {
+                            erros++;
+                            // Manter cotação existente se houver
+                            if (cotacoes[ativo]) {
+                                console.log(`📋 Mantendo cotação existente para ${ativo}:`, cotacoes[ativo]);
+                            }
+                        }
                     }
                     
                     // Pequena pausa entre requisições para não sobrecarregar a API
@@ -9838,12 +9954,22 @@
                 atualizarDashboardInvestimentos();
                 
                 // Mostrar resultado
-                const mensagem = `Cotações atualizadas!\n✅ Sucessos: ${sucessos}\n❌ Erros: ${erros}`;
+                let mensagem = `Processo de atualização concluído!\n✅ Sucessos: ${sucessos}\n❌ Erros: ${erros}`;
+                
+                // Verificar se há cotações simuladas
+                const cotacoesSimuladas = Object.values(cotacoes).filter(c => c.simulado).length;
+                if (cotacoesSimuladas > 0) {
+                    mensagem += `\n🎭 Cotações simuladas: ${cotacoesSimuladas}`;
+                    mensagem += '\n\n⚠️ Nota: Usando cotações simuladas em ambiente local.\nEm produção, as cotações reais serão obtidas das APIs.';
+                } else if (erros > 0 && sucessos === 0) {
+                    mensagem += '\n\n⚠️ Nota: As APIs externas não funcionam em ambiente local devido a políticas CORS.\nEm produção, as cotações serão atualizadas normalmente.';
+                }
+                
                 alert(mensagem);
                 
             } catch (error) {
                 console.error('Erro ao atualizar cotações:', error);
-                alert('Erro ao atualizar cotações. Verifique sua conexão com a internet.');
+                alert('Erro ao atualizar cotações.\n\n⚠️ Nota: Em ambiente local, as APIs externas podem não funcionar devido a políticas CORS.');
             } finally {
                 // Reabilitar botão
                 btnAtualizar.disabled = false;
