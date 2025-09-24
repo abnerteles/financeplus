@@ -11376,7 +11376,7 @@
             try {
                 mostrarIndicadorCarregamento('Carregando usuários...');
                 
-                const response = await fetch('/api/admin/users', {
+                const response = await fetch('/api/admin', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -11493,8 +11493,8 @@
                     throw new Error('Usuário não encontrado');
                 }
                 
-                const response = await fetch(`/api/admin/users/${userId}/subscription`, {
-                    method: 'PUT',
+                const response = await fetch('/api/admin', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -11531,8 +11531,8 @@
             try {
                 mostrarIndicadorCarregamento('Salvando alterações...');
                 
-                const response = await fetch(`/api/admin/users/${userId}/subscription`, {
-                    method: 'PUT',
+                const response = await fetch('/api/admin', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -11567,7 +11567,7 @@
         }
 
         async function buscarUsuarios() {
-            const response = await fetch('/api/admin/users', {
+            const response = await fetch('/api/admin', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -11591,11 +11591,16 @@
             try {
                 mostrarIndicadorCarregamento('Deletando usuário...');
                 
-                const response = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'DELETE',
+                const response = await fetch('/api/admin', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({
+                        action: 'delete_user',
+                        userId: userId,
+                        adminEmail: usuarioAtual ? usuarioAtual.email : 'admin@financeplus.com'
+                    })
                 });
 
                 const data = await response.json();
