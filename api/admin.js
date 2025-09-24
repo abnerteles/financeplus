@@ -20,6 +20,12 @@ module.exports = async (req, res) => {
     }
 
     try {
+        // Parse manual do JSON para compatibilidade com Vercel
+        let body = req.body;
+        if (typeof body === 'string') {
+            body = JSON.parse(body);
+        }
+
         // Para GET, pegar adminEmail do header, para outros métodos do body
         let adminEmail, action, userId, subscriptionType, subscriptionStatus;
         
@@ -27,7 +33,7 @@ module.exports = async (req, res) => {
             adminEmail = req.headers['admin-email'];
             action = 'list_users';
         } else {
-            ({ action, userId, subscriptionType, subscriptionStatus, adminEmail } = req.body);
+            ({ action, userId, subscriptionType, subscriptionStatus, adminEmail } = body);
         }
 
         // Verificar se o usuário é admin

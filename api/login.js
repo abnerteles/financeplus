@@ -20,7 +20,13 @@ module.exports = async (req, res) => {
         // Inicializar banco (será executado a cada chamada)
         await initializeDatabase();
 
-        const { email, password } = req.body;
+        // Parse manual do JSON para compatibilidade com Vercel
+        let body = req.body;
+        if (typeof body === 'string') {
+            body = JSON.parse(body);
+        }
+
+        const { email, password } = body;
         
         if (!email || !password) {
             return res.status(400).json({ 

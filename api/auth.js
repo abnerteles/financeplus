@@ -149,10 +149,8 @@ async function loginUser(email, password) {
             id: user.id,
             name: user.nome,
             email: user.email,
-            subscription: {
-                type: user.subscription_type,
-                status: user.subscription_status
-            }
+            subscription_type: user.subscription_type || 'free',
+            subscription_active: user.subscription_status === 'active'
         };
     } catch (error) {
         console.error('Erro no login:', error);
@@ -164,7 +162,7 @@ async function loginUser(email, password) {
 async function updateSubscription(userId, subscriptionType, expiresAt = null) {
     try {
         await pool.query(
-            'UPDATE users SET subscription_type = $1, subscription_expires_at = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+            'UPDATE usuarios SET subscription_type = $1, subscription_expires_at = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
             [subscriptionType, expiresAt, userId]
         );
         return { success: true };
@@ -178,7 +176,7 @@ async function updateSubscription(userId, subscriptionType, expiresAt = null) {
 async function checkSubscription(userId) {
     try {
         const result = await pool.query(
-            'SELECT subscription_type, subscription_expires_at FROM users WHERE id = $1',
+            'SELECT subscription_type, subscription_expires_at FROM usuarios WHERE id = $1',
             [userId]
         );
 

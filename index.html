@@ -1842,6 +1842,65 @@
             </div>
         </div>
 
+        <!-- Modal de Edição de Usuário -->
+        <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editUserModalLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Editar Usuário
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editUserForm">
+                            <input type="hidden" id="editUserId">
+                            
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Informações do Usuário</strong></label>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <p class="mb-1"><strong>ID:</strong> <span id="editUserIdDisplay"></span></p>
+                                        <p class="mb-1"><strong>Nome:</strong> <span id="editUserName"></span></p>
+                                        <p class="mb-0"><strong>Email:</strong> <span id="editUserEmail"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editSubscriptionType" class="form-label">Tipo de Assinatura</label>
+                                <select class="form-select" id="editSubscriptionType" required>
+                                    <option value="free">Gratuita</option>
+                                    <option value="premium">Premium</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editSubscriptionActive" class="form-label">Status da Assinatura</label>
+                                <select class="form-select" id="editSubscriptionActive" required>
+                                    <option value="true">Ativa</option>
+                                    <option value="false">Inativa</option>
+                                </select>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Dica:</strong> Usuários com assinatura inativa não terão acesso às funcionalidades premium, independentemente do tipo de assinatura.
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="salvarEdicaoUsuario()">
+                            <i class="bi bi-check-circle me-1"></i>Salvar Alterações
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Página de Investimentos -->
         <div id="investimentos" class="page">
             <div class="row mb-4">
@@ -11321,7 +11380,7 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'admin-email': usuarioAtual.email
+                        'admin-email': usuarioAtual ? usuarioAtual.email : 'admin@financeplus.com'
                     }
                 });
 
@@ -11355,7 +11414,8 @@
 
             tbody.innerHTML = usuarios.map(usuario => {
                 const dataFormatada = new Date(usuario.created_at).toLocaleDateString('pt-BR');
-                const statusBadge = usuario.subscription_active ? 
+                const isActive = usuario.subscription_status === 'active';
+                const statusBadge = isActive ? 
                     '<span class="badge bg-success">Ativa</span>' : 
                     '<span class="badge bg-danger">Inativa</span>';
                 
@@ -11366,17 +11426,20 @@
                 return `
                     <tr>
                         <td>${usuario.id}</td>
-                        <td>${usuario.name}</td>
+                        <td>${usuario.nome}</td>
                         <td>${usuario.email}</td>
                         <td>${subscriptionBadge}</td>
                         <td>${statusBadge}</td>
                         <td>${dataFormatada}</td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="editarSubscription(${usuario.id}, '${usuario.subscription_type}', ${usuario.subscription_active})" title="Editar Assinatura">
-                                    <i class="bi bi-pencil"></i>
+                                <button class="btn btn-outline-primary" onclick="abrirModalEdicao(${usuario.id}, '${usuario.nome}', '${usuario.email}', '${usuario.subscription_type}', '${usuario.subscription_status}')" title="Editar Usuário">
+                                    <i class="bi bi-pencil-square"></i>
                                 </button>
-                                <button class="btn btn-outline-danger" onclick="confirmarDeleteUsuario(${usuario.id}, '${usuario.name}')" title="Deletar Usuário">
+                                <button class="btn ${isActive ? 'btn-outline-warning' : 'btn-outline-success'}" onclick="alternarStatusUsuario(${usuario.id}, '${isActive ? 'inactive' : 'active'}')" title="${isActive ? 'Desativar' : 'Ativar'} Assinatura">
+                                    <i class="bi ${isActive ? 'bi-pause-circle' : 'bi-play-circle'}"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="confirmarDeleteUsuario(${usuario.id}, '${usuario.nome}')" title="Deletar Usuário">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -11390,7 +11453,7 @@
             const totalUsuarios = usuarios.length;
             const totalPremium = usuarios.filter(u => u.subscription_type === 'premium').length;
             const totalFree = usuarios.filter(u => u.subscription_type === 'free').length;
-            const totalAtivas = usuarios.filter(u => u.subscription_active).length;
+            const totalAtivas = usuarios.filter(u => u.subscription_status === 'active').length;
 
             document.getElementById('total-usuarios').textContent = totalUsuarios;
             document.getElementById('total-premium').textContent = totalPremium;
@@ -11398,20 +11461,37 @@
             document.getElementById('total-ativas').textContent = totalAtivas;
         }
 
-        async function editarSubscription(userId, currentType, currentActive) {
-            const novoTipo = prompt(`Alterar tipo de assinatura do usuário ${userId}:\n\nTipo atual: ${currentType}\nStatus atual: ${currentActive ? 'Ativa' : 'Inativa'}\n\nDigite o novo tipo (free/premium):`, currentType);
+        function abrirModalEdicao(userId, userName, userEmail, subscriptionType, subscriptionStatus) {
+            // Preencher os campos do modal
+            document.getElementById('editUserId').value = userId;
+            document.getElementById('editUserIdDisplay').textContent = userId;
+            document.getElementById('editUserName').textContent = userName;
+            document.getElementById('editUserEmail').textContent = userEmail;
+            document.getElementById('editSubscriptionType').value = subscriptionType;
+            document.getElementById('editSubscriptionActive').value = subscriptionStatus === 'active' ? 'true' : 'false';
             
-            if (novoTipo === null) return; // Cancelou
+            // Abrir o modal
+            const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            modal.show();
+        }
+
+        async function alternarStatusUsuario(userId, novoStatus) {
+            const acao = novoStatus === 'active' ? 'ativar' : 'desativar';
             
-            if (novoTipo !== 'free' && novoTipo !== 'premium') {
-                mostrarAlerta('Tipo de assinatura inválido. Use "free" ou "premium".', 'danger');
+            if (!confirm(`Tem certeza que deseja ${acao} a assinatura deste usuário?`)) {
                 return;
             }
 
-            const novoStatus = confirm('A assinatura deve estar ativa?');
-
             try {
-                mostrarIndicadorCarregamento('Atualizando assinatura...');
+                mostrarIndicadorCarregamento(`${acao.charAt(0).toUpperCase() + acao.slice(1)}ando assinatura...`);
+                
+                // Primeiro, buscar os dados atuais do usuário
+                const usuarios = await buscarUsuarios();
+                const usuario = usuarios.find(u => u.id === userId);
+                
+                if (!usuario) {
+                    throw new Error('Usuário não encontrado');
+                }
                 
                 const response = await fetch(`/api/admin/users/${userId}/subscription`, {
                     method: 'PUT',
@@ -11419,25 +11499,88 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        subscription_type: novoTipo,
-                        subscription_active: novoStatus
+                        action: 'update_subscription',
+                        userId: userId,
+                        subscriptionType: usuario.subscription_type,
+                        subscriptionStatus: novoStatus,
+                        adminEmail: usuarioAtual ? usuarioAtual.email : 'admin@financeplus.com'
                     })
                 });
 
                 const data = await response.json();
                 
                 if (data.success) {
-                    mostrarAlerta('Assinatura atualizada com sucesso!', 'success');
+                    mostrarAlerta(`Assinatura ${novoStatus === 'active' ? 'ativada' : 'desativada'} com sucesso!`, 'success');
                     carregarUsuarios(); // Recarregar lista
                 } else {
-                    mostrarAlerta('Erro ao atualizar assinatura: ' + data.message, 'danger');
+                    mostrarAlerta('Erro ao alterar status: ' + data.message, 'danger');
                 }
             } catch (error) {
-                console.error('Erro ao atualizar assinatura:', error);
-                mostrarAlerta('Erro ao atualizar assinatura: ' + error.message, 'danger');
+                console.error('Erro ao alterar status:', error);
+                mostrarAlerta('Erro ao alterar status: ' + error.message, 'danger');
             } finally {
                 ocultarIndicadorCarregamento();
             }
+        }
+
+        async function salvarEdicaoUsuario() {
+            const userId = document.getElementById('editUserId').value;
+            const subscriptionType = document.getElementById('editSubscriptionType').value;
+            const subscriptionStatus = document.getElementById('editSubscriptionActive').value === 'true' ? 'active' : 'inactive';
+
+            try {
+                mostrarIndicadorCarregamento('Salvando alterações...');
+                
+                const response = await fetch(`/api/admin/users/${userId}/subscription`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'update_subscription',
+                        userId: userId,
+                        subscriptionType: subscriptionType,
+                        subscriptionStatus: subscriptionStatus,
+                        adminEmail: usuarioAtual ? usuarioAtual.email : 'admin@financeplus.com'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    mostrarAlerta('Usuário atualizado com sucesso!', 'success');
+                    
+                    // Fechar o modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                    modal.hide();
+                    
+                    carregarUsuarios(); // Recarregar lista
+                } else {
+                    mostrarAlerta('Erro ao atualizar usuário: ' + data.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar usuário:', error);
+                mostrarAlerta('Erro ao atualizar usuário: ' + error.message, 'danger');
+            } finally {
+                ocultarIndicadorCarregamento();
+            }
+        }
+
+        async function buscarUsuarios() {
+            const response = await fetch('/api/admin/users', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'admin-email': usuarioAtual ? usuarioAtual.email : 'admin@financeplus.com'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao buscar usuários');
+            }
+
+            const data = await response.json();
+            return data.success ? data.users : [];
         }
 
         async function confirmarDeleteUsuario(userId, userName) {

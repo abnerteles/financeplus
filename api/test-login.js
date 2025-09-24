@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
 
         // Buscar usuário
         const result = await pool.query(
-            'SELECT id, name, email, password_hash, subscription_type, subscription_active FROM users WHERE email = $1',
+            'SELECT id, nome, email, senha, subscription_type, subscription_status FROM usuarios WHERE email = $1',
             [email]
         );
         
@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
         const user = result.rows[0];
         
         // Verificar senha
-        const isValidPassword = bcrypt.compareSync(password, user.password_hash);
+        const isValidPassword = bcrypt.compareSync(password, user.senha);
         
         if (!isValidPassword) {
             return res.status(401).json({
@@ -64,11 +64,11 @@ module.exports = async (req, res) => {
             success: true,
             user: {
                 id: user.id,
-                name: user.name,
+                name: user.nome,
                 email: user.email,
                 subscription: {
                     type: user.subscription_type,
-                    active: user.subscription_active
+                    active: user.subscription_status === 'active'
                 }
             }
         });

@@ -127,13 +127,25 @@ app.get('/api/admin/users', async (req, res) => {
 
 app.put('/api/admin/users/:userId/subscription', async (req, res) => {
     const adminModule = require('./admin');
-    const { subscription_type, subscription_active } = req.body;
+    const { 
+        subscription_type, 
+        subscription_active, 
+        subscriptionType, 
+        subscriptionStatus, 
+        adminEmail 
+    } = req.body;
+    
+    // Suportar ambos os formatos para compatibilidade
+    const finalSubscriptionType = subscriptionType || subscription_type;
+    const finalSubscriptionStatus = subscriptionStatus || (subscription_active ? 'active' : 'inactive');
+    const finalAdminEmail = adminEmail || 'admin@financeplus.com';
+    
     req.body = { 
         action: 'update_subscription', 
         userId: req.params.userId,
-        subscriptionType: subscription_type,
-        subscriptionStatus: subscription_active ? 'active' : 'inactive',
-        adminEmail: 'admin@financeplus.com'
+        subscriptionType: finalSubscriptionType,
+        subscriptionStatus: finalSubscriptionStatus,
+        adminEmail: finalAdminEmail
     };
     return adminModule(req, res);
 });

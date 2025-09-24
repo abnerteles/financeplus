@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
 
     try {
         // Verificar se já existe um usuário admin
-        const checkAdminQuery = 'SELECT id FROM users WHERE email = $1';
+        const checkAdminQuery = 'SELECT id FROM usuarios WHERE email = $1';
         const adminEmail = 'admin@financeplus.com';
         const existingAdmin = await pool.query(checkAdminQuery, [adminEmail]);
 
@@ -43,9 +43,9 @@ module.exports = async (req, res) => {
         const hashedPassword = bcrypt.hashSync(adminPassword, 10);
 
         const insertQuery = `
-            INSERT INTO users (name, email, password_hash, subscription_type, subscription_active, created_at)
+            INSERT INTO usuarios (nome, email, senha, subscription_type, subscription_status, created_at)
             VALUES ($1, $2, $3, $4, $5, NOW())
-            RETURNING id, name, email, subscription_type
+            RETURNING id, nome, email, subscription_type
         `;
 
         const result = await pool.query(insertQuery, [
