@@ -8944,6 +8944,18 @@
         }
         
         function atualizarResumoAtivos() {
+            // Carregar dados atualizados do localStorage
+            if (!usuarioAtual) {
+                console.warn('⚠️ Usuário não logado - não é possível atualizar resumo de ativos');
+                return;
+            }
+            
+            const userPrefix = `financas_${usuarioAtual.email}_`;
+            const investimentos = JSON.parse(localStorage.getItem(`${userPrefix}Investimentos`)) || [];
+            const dividendos = JSON.parse(localStorage.getItem(`${userPrefix}Dividendos`)) || [];
+            
+            console.log('📊 Atualizando resumo de ativos com:', { investimentos: investimentos.length, dividendos: dividendos.length });
+            
             // Calcular resumo de renda variável, criptomoedas e renda fixa
             const tbodyRendaVariavel = document.getElementById('tabela-resumo-renda-variavel').querySelector('tbody');
             const tbodyRendaFixa = document.getElementById('tabela-resumo-renda-fixa').querySelector('tbody');
@@ -9952,6 +9964,9 @@
                 
                 // Atualizar dashboard com novos valores
                 atualizarDashboardInvestimentos();
+                
+                // Atualizar resumo de ativos com cotações atualizadas
+                atualizarResumoAtivos();
                 
                 // Mostrar resultado
                 let mensagem = `Processo de atualização concluído!\n✅ Sucessos: ${sucessos}\n❌ Erros: ${erros}`;
