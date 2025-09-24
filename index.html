@@ -10869,15 +10869,9 @@
                 if (!devtools.open) {
                     devtools.open = true;
                     console.clear();
-                    console.log('%c🚫 ACESSO NEGADO', 'color: red; font-size: 50px; font-weight: bold;');
-                    console.log('%c⚠️ Esta aplicação está protegida contra inspeção.', 'color: orange; font-size: 16px;');
                     
-                    // Redirecionar ou fechar aba
-                    if (confirm('DevTools detectado! A página será recarregada por segurança.')) {
-                        window.location.reload();
-                    } else {
-                        window.close();
-                    }
+                    // Recarregar página silenciosamente
+                    window.location.reload();
                 }
             } else {
                 devtools.open = false;
@@ -10891,7 +10885,6 @@
                 e.preventDefault();
                 e.stopPropagation();
                 console.clear();
-                alert('🚫 F12 está desabilitado por segurança!');
                 return false;
             }
             
@@ -10900,7 +10893,6 @@
                 e.preventDefault();
                 e.stopPropagation();
                 console.clear();
-                alert('🚫 DevTools está desabilitado por segurança!');
                 return false;
             }
             
@@ -10909,7 +10901,6 @@
                 e.preventDefault();
                 e.stopPropagation();
                 console.clear();
-                alert('🚫 Console está desabilitado por segurança!');
                 return false;
             }
             
@@ -10917,7 +10908,6 @@
             if (e.ctrlKey && e.key === 'u') {
                 e.preventDefault();
                 e.stopPropagation();
-                alert('🚫 Visualizar código-fonte está desabilitado por segurança!');
                 return false;
             }
             
@@ -10926,7 +10916,6 @@
                 e.preventDefault();
                 e.stopPropagation();
                 console.clear();
-                alert('🚫 Seletor de elementos está desabilitado por segurança!');
                 return false;
             }
             
@@ -10934,7 +10923,6 @@
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 e.stopPropagation();
-                alert('🚫 Salvar página está desabilitado por segurança!');
                 return false;
             }
         });
@@ -10943,7 +10931,6 @@
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            alert('🚫 Menu de contexto está desabilitado por segurança!');
             return false;
         });
 
@@ -11023,12 +11010,8 @@
             subtree: true
         });
 
-        // Mensagem de aviso no console
+        // Limpeza silenciosa do console
         console.clear();
-        console.log('%c🔒 SISTEMA PROTEGIDO', 'color: #00ff00; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);');
-        console.log('%c⚠️ Esta aplicação possui proteção ativa contra DevTools', 'color: #ffaa00; font-size: 14px;');
-        console.log('%c🚫 Tentativas de inspeção serão bloqueadas', 'color: #ff0000; font-size: 14px;');
-        console.log('%c📧 Para suporte técnico: suporte@financeplus.com', 'color: #0088ff; font-size: 12px;');
 
     </script>
 </body>
