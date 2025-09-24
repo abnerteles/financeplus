@@ -9722,7 +9722,9 @@
         
         // Função para simular cotações em ambiente local (para testes)
         function simularCotacaoLocal(ativo) {
-            console.log(`🎭 Simulando cotação local para: ${ativo}`);
+            
+            // Primeiro, tentar usar o preço médio dos investimentos como base
+            const precoMedio = calcularPrecoMedio(ativo);
             
             // Preços base simulados para alguns ativos comuns
             const precosBase = {
@@ -9733,15 +9735,25 @@
                 'WEGE3': 42.30,
                 'MGLU3': 8.45,
                 'ABEV3': 12.60,
+                'MXRF11': 9.82, // Preço real atual
                 'BTC': 280000,
                 'ETH': 18500,
                 'ADA': 2.45
             };
             
-            const precoBase = precosBase[ativo] || Math.random() * 100 + 10;
+            // Usar preço médio se disponível, senão usar preço base ou aleatório
+            let precoBase;
+            if (precosBase[ativo]) {
+                // Para ativos com preço base definido, usar sempre o preço base (valor real)
+                precoBase = precosBase[ativo];
+            } else if (precoMedio > 0) {
+                precoBase = precoMedio;
+            } else {
+                precoBase = Math.random() * 100 + 10;
+            }
             
-            // Simular variação de -5% a +5%
-            const variacao = (Math.random() - 0.5) * 10;
+            // Simular variação pequena de -2% a +2% para ser mais realista
+            const variacao = (Math.random() - 0.5) * 4;
             const precoAtual = precoBase * (1 + variacao / 100);
             
             return {
@@ -9895,6 +9907,11 @@
         // Função principal para atualizar cotações
         async function atualizarCotacoes() {
             console.log('🔄 Iniciando atualização de cotações...');
+            
+            // Limpar cotações antigas para forçar nova busca
+            console.log('🧹 Limpando cotações antigas do cache...');
+            localStorage.removeItem('cotacoesAtuais');
+            
             const btnAtualizar = document.getElementById('btnAtualizarCotacoes');
             const ativos = obterAtivosUnicos();
             
@@ -9938,14 +9955,20 @@
                         sucessos++;
                         console.log(`✅ Sucesso para ${ativo}`);
                     } else {
-                        console.warn(`⚠️ Falha ao obter cotação para ${ativo}, tentando simulação local`);
+                        console.warn(`⚠️ Falha ao obter cotação para ${ativo}, usando preço médio como fallback`);
                         
-                        // Tentar simulação local se API falhar
-                        const cotacaoSimulada = simularCotacaoLocal(ativo);
-                        if (cotacaoSimulada) {
-                            cotacoes[ativo] = cotacaoSimulada;
+                        // Usar preço médio dos investimentos como fallback
+                        const precoMedio = calcularPrecoMedio(ativo);
+                        if (precoMedio > 0) {
+                            cotacoes[ativo] = {
+                                ticker: ativo,
+                                preco: precoMedio,
+                                variacao: 0,
+                                ultimaAtualizacao: new Date().toISOString(),
+                                fallback: true // Flag para indicar que é fallback
+                            };
                             sucessos++;
-                            console.log(`🎭 Cotação simulada para ${ativo}:`, cotacaoSimulada);
+                            console.log(`💰 Usando preço médio para ${ativo}: R$ ${precoMedio.toFixed(2)}`);
                         } else {
                             erros++;
                             // Manter cotação existente se houver
@@ -9995,6 +10018,7 @@
         // Função para obter preço atual de um ativo (cotação da API ou preço médio como fallback)
         function obterPrecoAtual(ativo, precoMedio) {
             const cotacoes = carregarCotacoes();
+            
             if (cotacoes[ativo] && cotacoes[ativo].preco) {
                 return cotacoes[ativo].preco;
             }
@@ -10020,7 +10044,9 @@
                 totalValor += inv.quantidade * inv.preco;
             });
             
-            return totalQuantidade > 0 ? totalValor / totalQuantidade : 0;
+            const precoMedio = totalQuantidade > 0 ? totalValor / totalQuantidade : 0;
+            
+            return precoMedio;
         }
 
         // Função para calcular valorização de um ativo
