@@ -7509,8 +7509,8 @@
                     </td>
                 `;
                 
-                // Se for período diário, mostrar detalhes das transações
-                if (periodo === 'diario' && dados.transacoes.length > 0) {
+                // Se houver transações, mostrar detalhes (removido verificação de período diário)
+                if (dados.transacoes && dados.transacoes.length > 0) {
                     dados.transacoes.forEach(transacao => {
                         const detailRow = tbody.insertRow();
                         detailRow.className = 'table-light';
