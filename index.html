@@ -6580,7 +6580,7 @@
         
         function gerarRelatorioFluxoCaixa(lancamentos, dataInicio, dataFim) {
             // Gerar dados do fluxo de caixa usando a função dedicada
-            const dadosFluxoCaixa = gerarDadosFluxoCaixa();
+            const dadosFluxoCaixa = gerarDadosFluxoCaixa(lancamentos, dataInicio, dataFim);
             
             if (!dadosFluxoCaixa) {
                 return; // Erro já foi mostrado na função gerarDadosFluxoCaixa
@@ -7553,23 +7553,34 @@
         }
 
         // Função para gerar dados do fluxo de caixa
-        function gerarDadosFluxoCaixa() {
-            const dataInicio = document.getElementById('data-inicio-relatorio').value;
-            const dataFim = document.getElementById('data-fim-relatorio').value;
+        function gerarDadosFluxoCaixa(lancamentosFiltrados = null, dataInicioParam = null, dataFimParam = null) {
+            let dataInicio, dataFim, lancamentosParaUsar;
             
-            if (!dataInicio || !dataFim) {
-                alert('Por favor, selecione as datas de início e fim.');
-                return null;
+            if (dataInicioParam && dataFimParam) {
+                // Usar parâmetros passados
+                dataInicio = dataInicioParam;
+                dataFim = dataFimParam;
+                lancamentosParaUsar = lancamentosFiltrados || lancamentos;
+            } else {
+                // Obter das inputs do formulário
+                dataInicio = document.getElementById('data-inicio-relatorio').value;
+                dataFim = document.getElementById('data-fim-relatorio').value;
+                lancamentosParaUsar = lancamentos;
+                
+                if (!dataInicio || !dataFim) {
+                    alert('Por favor, selecione as datas de início e fim.');
+                    return null;
+                }
             }
             
             const inicio = new Date(dataInicio);
             const fim = new Date(dataFim);
             
-            // Filtrar lançamentos no período
+            // Filtrar lançamentos no período (se necessário)
             console.log(`🔍 DEBUG FILTRO - Início: ${inicio} | Fim: ${fim}`);
-            console.log(`🔍 DEBUG FILTRO - Total de lançamentos disponíveis: ${lancamentos.length}`);
+            console.log(`🔍 DEBUG FILTRO - Total de lançamentos disponíveis: ${lancamentosParaUsar.length}`);
             
-            const lancamentosFiltrados = lancamentos.filter(lancamento => {
+            const lancamentosFiltradosPorData = lancamentosParaUsar.filter(lancamento => {
                 const dataLancamento = new Date(lancamento.data);
                 const dentroDoFiltro = dataLancamento >= inicio && dataLancamento <= fim;
                 
@@ -7578,7 +7589,7 @@
                 return dentroDoFiltro;
             });
             
-            console.log(`🔍 DEBUG FILTRO - Lançamentos filtrados: ${lancamentosFiltrados.length}`);
+            console.log(`🔍 DEBUG FILTRO - Lançamentos filtrados: ${lancamentosFiltradosPorData.length}`);
             
             // Calcular saldo acumulado de todos os lançamentos anteriores ao período
             // Garantir que estamos usando o saldo inicial correto do localStorage
@@ -7609,7 +7620,7 @@
             // Não inicializar períodos vazios - apenas criar quando houver movimentação
             
             // Processar lançamentos
-            lancamentosFiltrados.forEach(lancamento => {
+            lancamentosFiltradosPorData.forEach(lancamento => {
                 const dataLancamento = new Date(lancamento.data);
                 
                 // Verificar se a data do lançamento está dentro do intervalo
@@ -7711,8 +7722,8 @@
             return {
                 dados: fluxoCaixa,
                 periodos: periodosValidos,
-                totalEntradas: lancamentosFiltrados.filter(l => l.tipo === 'entrada').reduce((sum, l) => sum + l.valor, 0),
-                totalSaidas: lancamentosFiltrados.filter(l => l.tipo === 'saida').reduce((sum, l) => sum + l.valor, 0),
+                totalEntradas: lancamentosFiltradosPorData.filter(l => l.tipo === 'entrada').reduce((sum, l) => sum + l.valor, 0),
+                totalSaidas: lancamentosFiltradosPorData.filter(l => l.tipo === 'saida').reduce((sum, l) => sum + l.valor, 0),
                 saldoInicial: saldoAcumulado, // Saldo que inclui todos os lançamentos anteriores
                 saldoFinal: saldoCorrente
             };
