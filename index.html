@@ -6121,11 +6121,10 @@
                     const option = document.createElement('option');
                     option.value = conta.id;
                     
-                    // Criar descrição da conta
+                    // Criar descrição da conta com número como principal
+                    const numeroConta = conta.numero || conta.agencia || 'S/N';
                     const tipoConta = conta.tipo || 'Conta Corrente';
-                    const numeroConta = conta.numero || conta.agencia || '';
-                    const infoAdicional = numeroConta ? ` (${numeroConta})` : '';
-                    option.textContent = `${tipoConta}${infoAdicional}`;
+                    option.textContent = `${numeroConta} (${tipoConta})`;
                     
                     accountSelect.appendChild(option);
                 });
@@ -6288,7 +6287,7 @@
                 
                 // Buscar informações da conta selecionada
                 const contaSelecionada = bancos.find(banco => banco.id === selectedAccountId);
-                const nomeConta = contaSelecionada ? (contaSelecionada.tipo || 'Conta Corrente') : 'Conta Corrente';
+                const numeroConta = contaSelecionada ? (contaSelecionada.numero || 'S/N') : 'S/N';
                 
                 // Categorização automática baseada no tipo
                 let categoria;
@@ -6304,7 +6303,7 @@
                     descricao: memo.trim(),
                     categoria: categoria,
                     banco: selectedBankName,
-                    conta: nomeConta,
+                    conta: numeroConta,
                     tipo: tipo,
                     tipoTransacao: tipo === 'entrada' ? 'receita' : 'despesa',
                     cartao: '',
