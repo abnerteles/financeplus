@@ -1783,10 +1783,20 @@
                                         </div>
                                         
                                         <div class="mb-3" id="ofx-bank-selection" style="display: none;">
-                                            <label for="ofx-bank-select" class="form-label">Banco/Conta</label>
-                                            <select class="form-select" id="ofx-bank-select">
-                                                <option value="">Selecione o banco/conta</option>
-                                            </select>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="ofx-bank-select" class="form-label">Banco</label>
+                                                    <select class="form-select" id="ofx-bank-select">
+                                                        <option value="">Selecione o banco</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="ofx-account-select" class="form-label">Conta</label>
+                                                    <select class="form-select" id="ofx-account-select" disabled>
+                                                        <option value="">Selecione a conta</option>
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
                                         
                                         <div class="d-grid gap-2">
@@ -2991,6 +3001,8 @@
             
             // Event listeners para importação OFX
             document.getElementById('ofx-file-input').addEventListener('change', handleOFXFileSelection);
+            document.getElementById('ofx-bank-select').addEventListener('change', handleBankSelection);
+            document.getElementById('ofx-account-select').addEventListener('change', handleAccountSelection);
             document.getElementById('process-ofx-btn').addEventListener('click', processOFXFile);
             document.getElementById('cancel-ofx-import').addEventListener('click', cancelOFXImport);
             document.getElementById('confirm-ofx-import').addEventListener('click', confirmOFXImport);
@@ -6060,24 +6072,25 @@
             const processBtn = document.getElementById('process-ofx-btn');
             const bankSelection = document.getElementById('ofx-bank-selection');
             const bankSelect = document.getElementById('ofx-bank-select');
+            const accountSelect = document.getElementById('ofx-account-select');
             
             if (file) {
-                // Habilitar botão de processar
-                processBtn.disabled = false;
-                
-                // Mostrar seleção de banco e popular com bancos existentes
+                // Mostrar seleção de banco e popular com bancos únicos
                 bankSelection.style.display = 'block';
                 
-                // Limpar e popular select de bancos
-                bankSelect.innerHTML = '<option value="">Selecione o banco/conta</option>';
-                bancos.forEach(banco => {
+                // Limpar selects
+                bankSelect.innerHTML = '<option value="">Selecione o banco</option>';
+                accountSelect.innerHTML = '<option value="">Selecione a conta</option>';
+                accountSelect.disabled = true;
+                processBtn.disabled = true;
+                
+                // Obter bancos únicos
+                const bancosUnicos = [...new Set(bancos.map(banco => banco.nome))];
+                
+                bancosUnicos.forEach(nomeBanco => {
                     const option = document.createElement('option');
-                    option.value = banco.nome;
-                    // Melhorar a exibição das informações do banco
-                    const tipoConta = banco.tipo || 'Conta Corrente';
-                    const numeroConta = banco.numero || banco.agencia || '';
-                    const infoAdicional = numeroConta ? ` (${numeroConta})` : ` - ${tipoConta}`;
-                    option.textContent = `${banco.nome}${infoAdicional}`;
+                    option.value = nomeBanco;
+                    option.textContent = nomeBanco;
                     bankSelect.appendChild(option);
                 });
                 
@@ -6088,10 +6101,52 @@
             }
         }
         
+        // Função para popular contas quando banco é selecionado
+        function handleBankSelection() {
+            const bankSelect = document.getElementById('ofx-bank-select');
+            const accountSelect = document.getElementById('ofx-account-select');
+            const processBtn = document.getElementById('process-ofx-btn');
+            const selectedBank = bankSelect.value;
+            
+            // Limpar e desabilitar seleção de conta
+            accountSelect.innerHTML = '<option value="">Selecione a conta</option>';
+            accountSelect.disabled = true;
+            processBtn.disabled = true;
+            
+            if (selectedBank) {
+                // Filtrar contas do banco selecionado
+                const contasDoBanco = bancos.filter(banco => banco.nome === selectedBank);
+                
+                contasDoBanco.forEach(conta => {
+                    const option = document.createElement('option');
+                    option.value = conta.id;
+                    
+                    // Criar descrição da conta
+                    const tipoConta = conta.tipo || 'Conta Corrente';
+                    const numeroConta = conta.numero || conta.agencia || '';
+                    const infoAdicional = numeroConta ? ` (${numeroConta})` : '';
+                    option.textContent = `${tipoConta}${infoAdicional}`;
+                    
+                    accountSelect.appendChild(option);
+                });
+                
+                accountSelect.disabled = false;
+            }
+        }
+        
+        // Função para habilitar botão quando conta é selecionada
+        function handleAccountSelection() {
+            const accountSelect = document.getElementById('ofx-account-select');
+            const processBtn = document.getElementById('process-ofx-btn');
+            
+            processBtn.disabled = !accountSelect.value;
+        }
+        
         // Função para processar arquivo OFX
         function processOFXFile() {
             const fileInput = document.getElementById('ofx-file-input');
             const bankSelect = document.getElementById('ofx-bank-select');
+            const accountSelect = document.getElementById('ofx-account-select');
             const file = fileInput.files[0];
             
             if (!file) {
@@ -6100,7 +6155,12 @@
             }
             
             if (!bankSelect.value) {
-                alert('❌ Selecione o banco/conta para as transações!');
+                alert('❌ Selecione o banco para as transações!');
+                return;
+            }
+            
+            if (!accountSelect.value) {
+                alert('❌ Selecione a conta para as transações!');
                 return;
             }
             
@@ -6112,8 +6172,10 @@
                     const ofxContent = e.target.result;
                     console.log('📄 Conteúdo OFX carregado, tamanho:', ofxContent.length);
                     
-                    // Processar OFX usando a biblioteca ofx-js
-                    parseOFXContent(ofxContent, bankSelect.value);
+                    // Processar OFX usando parser interno
+                    const selectedBankName = bankSelect.value;
+                    const selectedAccountId = accountSelect.value;
+                    parseOFXContent(ofxContent, selectedBankName, selectedAccountId);
                     
                 } catch (error) {
                     ocultarIndicadorCarregamento();
@@ -6131,12 +6193,12 @@
         }
         
         // Função para fazer parse do conteúdo OFX
-        function parseOFXContent(ofxContent, selectedBank) {
+        function parseOFXContent(ofxContent, selectedBankName, selectedAccountId) {
             try {
                 console.log('🔄 Iniciando parse do OFX usando parser interno...');
                 
                 // Usar parser manual como método principal
-                const transactions = parseOFXManual(ofxContent, selectedBank);
+                const transactions = parseOFXManual(ofxContent, selectedBankName, selectedAccountId);
                 
                 if (transactions.length > 0) {
                     console.log(`✅ OFX parseado com sucesso: ${transactions.length} transações encontradas`);
@@ -6203,7 +6265,7 @@
         }
         
         // Função para mapear transação OFX para formato da aplicação
-        function mapOFXTransactionToApp(ofxTransaction, selectedBank, index) {
+        function mapOFXTransactionToApp(ofxTransaction, selectedBankName, selectedAccountId, index) {
             try {
                 // Extrair dados da transação OFX
                 const dtposted = ofxTransaction.DTPOSTED || '';
@@ -6224,16 +6286,25 @@
                 const tipo = trnamt >= 0 ? 'entrada' : 'saida';
                 const valor = Math.abs(trnamt);
                 
-                // Mapear categoria baseada na descrição
-                const categoria = mapearCategoriaAutomatica(memo);
+                // Buscar informações da conta selecionada
+                const contaSelecionada = bancos.find(banco => banco.id === selectedAccountId);
+                const nomeConta = contaSelecionada ? (contaSelecionada.tipo || 'Conta Corrente') : 'Conta Corrente';
+                
+                // Categorização automática baseada no tipo
+                let categoria;
+                if (tipo === 'entrada') {
+                    categoria = 'Receitas diversas';
+                } else {
+                    categoria = 'Despesas diversas';
+                }
                 
                 return {
                     id: nextId++,
                     data: dataFormatada,
                     descricao: memo.trim(),
                     categoria: categoria,
-                    banco: selectedBank,
-                    conta: 'Conta Corrente', // Padrão
+                    banco: selectedBankName,
+                    conta: nomeConta,
                     tipo: tipo,
                     tipoTransacao: tipo === 'entrada' ? 'receita' : 'despesa',
                     cartao: '',
@@ -6241,7 +6312,8 @@
                     valor: valor,
                     status: 'confirmado',
                     ofxId: fitid, // ID único do OFX para evitar duplicatas
-                    importadoOFX: true // Flag para identificar transações importadas
+                    importadoOFX: true, // Flag para identificar transações importadas
+                    bancoId: selectedAccountId // ID da conta para cálculos de saldo
                 };
                 
             } catch (error) {
@@ -6279,7 +6351,7 @@
         }
         
         // Função para parse manual de OFX (fallback)
-        function parseOFXManual(ofxContent, selectedBank) {
+        function parseOFXManual(ofxContent, selectedBankName, selectedAccountId) {
             const transactions = [];
             
             try {
@@ -6298,7 +6370,7 @@
                         currentTransaction = {};
                     } else if (line.includes('</STMTTRN>')) {
                         if (inTransaction && Object.keys(currentTransaction).length > 0) {
-                            const mappedTransaction = mapOFXTransactionToApp(currentTransaction, selectedBank, transactions.length);
+                            const mappedTransaction = mapOFXTransactionToApp(currentTransaction, selectedBankName, selectedAccountId, transactions.length);
                             if (mappedTransaction) {
                                 transactions.push(mappedTransaction);
                             }
@@ -6451,6 +6523,9 @@
                 // Salvar dados
                 salvarDados();
                 
+                // Atualizar saldos dos bancos afetados
+                atualizarSaldosAposImportacaoOFX(newTransactions);
+                
                 // Atualizar interface
                 carregarLancamentos();
                 atualizarDashboard();
@@ -6472,6 +6547,54 @@
             }
         }
 
+        
+        // Função para atualizar saldos após importação OFX
+        function atualizarSaldosAposImportacaoOFX(transacoesImportadas) {
+            try {
+                console.log('🔄 Atualizando saldos após importação OFX...');
+                
+                // Agrupar transações por banco/conta
+                const transacoesPorConta = {};
+                
+                transacoesImportadas.forEach(transacao => {
+                    const bancoId = transacao.bancoId;
+                    if (!transacoesPorConta[bancoId]) {
+                        transacoesPorConta[bancoId] = {
+                            entradas: 0,
+                            saidas: 0,
+                            total: 0
+                        };
+                    }
+                    
+                    if (transacao.tipo === 'entrada') {
+                        transacoesPorConta[bancoId].entradas += transacao.valor;
+                        transacoesPorConta[bancoId].total += transacao.valor;
+                    } else {
+                        transacoesPorConta[bancoId].saidas += transacao.valor;
+                        transacoesPorConta[bancoId].total -= transacao.valor;
+                    }
+                });
+                
+                // Atualizar saldos dos bancos afetados
+                Object.keys(transacoesPorConta).forEach(bancoId => {
+                    const banco = bancos.find(b => b.id === bancoId);
+                    if (banco) {
+                        const movimentacao = transacoesPorConta[bancoId];
+                        banco.saldo = (banco.saldo || 0) + movimentacao.total;
+                        
+                        console.log(`💰 Saldo atualizado - ${banco.nome}: ${movimentacao.total >= 0 ? '+' : ''}R$ ${movimentacao.total.toFixed(2)} (Novo saldo: R$ ${banco.saldo.toFixed(2)})`);
+                    }
+                });
+                
+                // Salvar dados atualizados
+                salvarDados();
+                
+                console.log('✅ Saldos atualizados com sucesso após importação OFX');
+                
+            } catch (error) {
+                console.error('❌ Erro ao atualizar saldos após importação OFX:', error);
+            }
+        }
         
         // Função de teste para verificar lançamentos mensais
         function testarLancamentoMensal() {
