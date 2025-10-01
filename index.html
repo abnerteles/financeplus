@@ -1827,6 +1827,7 @@
                                                     <th>Descrição</th>
                                                     <th>Valor</th>
                                                     <th>Tipo</th>
+                                                    <th>Tipo Transação</th>
                                                     <th>Status</th>
                                                 </tr>
                                             </thead>
@@ -6294,6 +6295,7 @@
                 const trnamt = parseFloat(ofxTransaction.TRNAMT || 0);
                 const memo = ofxTransaction.MEMO || ofxTransaction.NAME || `Transação ${index + 1}`;
                 const fitid = ofxTransaction.FITID || `OFX_${Date.now()}_${index}`;
+                const trntype = ofxTransaction.TRNTYPE || '';
                 
                 // Converter data OFX (YYYYMMDD) para formato da aplicação
                 let dataFormatada = '';
@@ -6308,9 +6310,11 @@
                 const tipo = trnamt >= 0 ? 'entrada' : 'saida';
                 const valor = Math.abs(trnamt);
                 
-                // Buscar informações da conta selecionada
+                // Buscar informações da conta e banco selecionados
                 let contaSelecionada = null;
+                let bancoSelecionado = null;
                 let numeroConta = 'S/N';
+                let bancoId = null;
                 
                 // Procurar a conta pelo ID em todos os bancos
                 for (const banco of bancos) {
@@ -6318,18 +6322,21 @@
                         const conta = banco.contas.find(c => c.id == selectedAccountId);
                         if (conta) {
                             contaSelecionada = conta;
-                            numeroConta = conta.numero || 'S/N';
+                            bancoSelecionado = banco;
+                            numeroConta = conta.numero || conta.agencia || `Conta-${conta.id}`;
+                            bancoId = banco.id;
                             break;
                         }
                     }
                 }
                 
-                // Categorização automática baseada no tipo
-                let categoria;
-                if (tipo === 'entrada') {
-                    categoria = 'Receitas diversas';
-                } else {
-                    categoria = 'Despesas diversas';
+                // Detectar tipo de transação baseado no MEMO e TRNTYPE
+                const tipoTransacaoDetectado = detectarTipoTransacao(memo, trntype);
+                
+                // Categorização automática baseada no tipo e descrição
+                let categoria = mapearCategoriaAutomatica(memo);
+                if (categoria === 'Outros') {
+                    categoria = tipo === 'entrada' ? 'Receitas diversas' : 'Despesas diversas';
                 }
                 
                 return {
@@ -6337,7 +6344,7 @@
                     data: dataFormatada,
                     descricao: memo.trim(),
                     categoria: categoria,
-                    banco: selectedBankName,
+                    banco: bancoSelecionado ? bancoSelecionado.nome : selectedBankName,
                     conta: numeroConta,
                     tipo: tipo,
                     tipoTransacao: tipo === 'entrada' ? 'receita' : 'despesa',
@@ -6347,7 +6354,9 @@
                     status: 'confirmado',
                     ofxId: fitid, // ID único do OFX para evitar duplicatas
                     importadoOFX: true, // Flag para identificar transações importadas
-                    bancoId: selectedAccountId // ID da conta para cálculos de saldo
+                    bancoId: bancoId || selectedAccountId, // ID do banco para cálculos de saldo
+                    tipoTransacaoOFX: tipoTransacaoDetectado, // Tipo detectado do OFX (PIX, cartão, etc.)
+                    trnTypeOFX: trntype // Tipo original do OFX
                 };
                 
             } catch (error) {
@@ -6382,6 +6391,122 @@
             }
             
             return 'Outros'; // Categoria padrão
+        }
+        
+        // Função para detectar tipo de transação baseado no MEMO e TRNTYPE
+        function detectarTipoTransacao(memo, trntype) {
+            const memoLower = memo.toLowerCase();
+            const trntypeLower = trntype.toLowerCase();
+            
+            // Detectar PIX
+            if (memoLower.includes('pix') || 
+                memoLower.includes('transferência enviada pelo pix') ||
+                memoLower.includes('transferencia enviada pelo pix') ||
+                memoLower.includes('pix enviado') ||
+                memoLower.includes('pix recebido')) {
+                return 'PIX';
+            }
+            
+            // Detectar cartão de débito
+            if (memoLower.includes('cartão de débito') ||
+                memoLower.includes('cartao de debito') ||
+                memoLower.includes('débito automático') ||
+                memoLower.includes('debito automatico') ||
+                memoLower.includes('compra débito') ||
+                memoLower.includes('compra debito') ||
+                trntypeLower === 'debit') {
+                return 'Cartão de Débito';
+            }
+            
+            // Detectar cartão de crédito
+            if (memoLower.includes('cartão de crédito') ||
+                memoLower.includes('cartao de credito') ||
+                memoLower.includes('compra crédito') ||
+                memoLower.includes('compra credito') ||
+                memoLower.includes('fatura cartão') ||
+                memoLower.includes('fatura cartao')) {
+                return 'Cartão de Crédito';
+            }
+            
+            // Detectar TED/DOC
+            if (memoLower.includes('ted') ||
+                memoLower.includes('doc') ||
+                memoLower.includes('transferência eletrônica') ||
+                memoLower.includes('transferencia eletronica') ||
+                memoLower.includes('transferência bancária') ||
+                memoLower.includes('transferencia bancaria')) {
+                return 'TED/DOC';
+            }
+            
+            // Detectar boleto
+            if (memoLower.includes('boleto') ||
+                memoLower.includes('cobrança') ||
+                memoLower.includes('cobranca') ||
+                memoLower.includes('pagamento de título') ||
+                memoLower.includes('pagamento de titulo')) {
+                return 'Boleto';
+            }
+            
+            // Detectar depósito
+            if (memoLower.includes('depósito') ||
+                memoLower.includes('deposito') ||
+                memoLower.includes('dep em dinheiro') ||
+                memoLower.includes('dep. dinheiro') ||
+                trntypeLower === 'credit' && memoLower.includes('dep')) {
+                return 'Depósito';
+            }
+            
+            // Detectar saque
+            if (memoLower.includes('saque') ||
+                memoLower.includes('retirada') ||
+                memoLower.includes('atm') ||
+                memoLower.includes('caixa eletrônico') ||
+                memoLower.includes('caixa eletronico')) {
+                return 'Saque';
+            }
+            
+            // Detectar transferência entre contas
+            if (memoLower.includes('transferência entre contas') ||
+                memoLower.includes('transferencia entre contas') ||
+                memoLower.includes('transf. conta') ||
+                memoLower.includes('transf conta')) {
+                return 'Transferência entre Contas';
+            }
+            
+            // Detectar tarifa/taxa
+            if (memoLower.includes('tarifa') ||
+                memoLower.includes('taxa') ||
+                memoLower.includes('iof') ||
+                memoLower.includes('anuidade') ||
+                memoLower.includes('manutenção')) {
+                return 'Tarifa/Taxa';
+            }
+            
+            // Detectar salário/ordenado
+            if (memoLower.includes('salário') ||
+                memoLower.includes('salario') ||
+                memoLower.includes('ordenado') ||
+                memoLower.includes('vencimento') ||
+                memoLower.includes('folha de pagamento') ||
+                memoLower.includes('folha pagamento')) {
+                return 'Salário';
+            }
+            
+            // Baseado no TRNTYPE quando MEMO não é específico
+            switch (trntypeLower) {
+                case 'credit':
+                    return 'Crédito';
+                case 'debit':
+                    return 'Débito';
+                case 'payment':
+                    return 'Pagamento';
+                case 'transfer':
+                    return 'Transferência';
+                case 'fee':
+                    return 'Taxa';
+                default:
+                    return 'Outros';
+            }
         }
         
         // Função para parse manual de OFX (fallback)
@@ -6423,6 +6548,8 @@
                             currentTransaction.NAME = line.replace(/<\/?NAME>/g, '');
                         } else if (line.includes('<FITID>')) {
                             currentTransaction.FITID = line.replace(/<\/?FITID>/g, '');
+                        } else if (line.includes('<TRNTYPE>')) {
+                            currentTransaction.TRNTYPE = line.replace(/<\/?TRNTYPE>/g, '');
                         }
                     }
                 }
@@ -6467,6 +6594,11 @@
                     <td>
                         <span class="badge bg-${transaction.tipo === 'entrada' ? 'success' : 'danger'}">
                             ${transaction.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-info text-dark">
+                            ${transaction.tipoTransacaoOFX || 'Outros'}
                         </span>
                     </td>
                     <td>
