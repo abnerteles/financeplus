@@ -6406,7 +6406,7 @@
                     cartao: cartaoId, // ID do cartão quando aplicável
                     contaDestino: '', // Vazio para transações normais (não transferências)
                     valor: valor,
-                    status: 'confirmado', // Status padrão para importações
+                    status: 'realizado', // Status para incluir no cálculo de saldo
                     ofxId: fitid, // ID único do OFX para evitar duplicatas
                     importadoOFX: true, // Flag para identificar transações importadas
                     bancoId: bancoId || selectedAccountId, // ID do banco para referência
@@ -6745,9 +6745,6 @@
                 
                 // Salvar dados
                 salvarDados();
-                
-                // Atualizar saldos dos bancos afetados
-                atualizarSaldosAposImportacaoOFX(newTransactions);
                 
                 // Atualizar interface
                 carregarLancamentos();
