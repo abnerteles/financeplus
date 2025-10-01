@@ -6339,6 +6339,61 @@
                     categoria = tipo === 'entrada' ? 'Receitas diversas' : 'Despesas diversas';
                 }
                 
+                // Mapear tipo de transação OFX para tipos do sistema
+                let tipoTransacaoSistema = '';
+                let cartaoId = '';
+                
+                switch (tipoTransacaoDetectado) {
+                    case 'PIX':
+                        tipoTransacaoSistema = 'pix';
+                        break;
+                    case 'Cartão de Débito':
+                        tipoTransacaoSistema = 'debito';
+                        // Buscar cartão de débito padrão do banco (se existir)
+                        if (bancoSelecionado && bancoSelecionado.cartoes) {
+                            const cartaoDebito = bancoSelecionado.cartoes.find(c => c.tipo === 'debito');
+                            if (cartaoDebito) cartaoId = cartaoDebito.id;
+                        }
+                        break;
+                    case 'Cartão de Crédito':
+                        tipoTransacaoSistema = 'credito';
+                        // Buscar cartão de crédito padrão do banco (se existir)
+                        if (bancoSelecionado && bancoSelecionado.cartoes) {
+                            const cartaoCredito = bancoSelecionado.cartoes.find(c => c.tipo === 'credito');
+                            if (cartaoCredito) cartaoId = cartaoCredito.id;
+                        }
+                        break;
+                    case 'TED/DOC':
+                        // Verificar se é TED ou DOC especificamente
+                        const memoLower = memo.toLowerCase();
+                        if (memoLower.includes('ted')) {
+                            tipoTransacaoSistema = 'ted';
+                        } else if (memoLower.includes('doc')) {
+                            tipoTransacaoSistema = 'doc';
+                        } else {
+                            tipoTransacaoSistema = 'transferencia';
+                        }
+                        break;
+                    case 'Boleto':
+                        tipoTransacaoSistema = 'saldo_conta'; // Boletos geralmente debitam do saldo da conta
+                        break;
+                    default:
+                        // Fallback baseado no tipo de entrada/saída
+                        if (tipo === 'entrada') {
+                            // Para entradas, usar saldo_conta como padrão (depósitos, recebimentos)
+                            tipoTransacaoSistema = 'saldo_conta';
+                        } else {
+                            // Para saídas, verificar se pode ser dinheiro ou saldo da conta
+                            const memoLower = memo.toLowerCase();
+                            if (memoLower.includes('dinheiro') || memoLower.includes('espécie') || memoLower.includes('cash')) {
+                                tipoTransacaoSistema = 'dinheiro';
+                            } else {
+                                tipoTransacaoSistema = 'saldo_conta';
+                            }
+                        }
+                        break;
+                }
+                
                 return {
                     id: nextId++,
                     data: dataFormatada,
@@ -6347,11 +6402,11 @@
                     banco: bancoId || selectedAccountId, // ID do banco (não nome) para cálculos de saldo
                     conta: selectedAccountId, // ID da conta para cálculos de saldo
                     tipo: tipo,
-                    tipoTransacao: tipo === 'entrada' ? 'receita' : 'despesa',
-                    cartao: '',
-                    contaDestino: '',
+                    tipoTransacao: tipoTransacaoSistema, // Tipo mapeado corretamente
+                    cartao: cartaoId, // ID do cartão quando aplicável
+                    contaDestino: '', // Vazio para transações normais (não transferências)
                     valor: valor,
-                    status: 'confirmado',
+                    status: 'confirmado', // Status padrão para importações
                     ofxId: fitid, // ID único do OFX para evitar duplicatas
                     importadoOFX: true, // Flag para identificar transações importadas
                     bancoId: bancoId || selectedAccountId, // ID do banco para referência
