@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://unpkg.com/ofx-js@latest/dist/ofx.min.js" onerror="console.warn('⚠️ Falha ao carregar biblioteca ofx-js')"></script>
+    <!-- OFX parsing usando parser manual interno -->
     
 
     
@@ -6133,24 +6133,13 @@
         // Função para fazer parse do conteúdo OFX
         function parseOFXContent(ofxContent, selectedBank) {
             try {
-                console.log('🔄 Iniciando parse do OFX...');
+                console.log('🔄 Iniciando parse do OFX usando parser interno...');
                 
-                // Verificar se a biblioteca OFX está disponível
-                if (typeof OFX !== 'undefined' && OFX.parse) {
-                    console.log('📚 Usando biblioteca ofx-js para parse...');
-                    
-                    // Parse do OFX usando a biblioteca
-                    OFX.parse(ofxContent).then(ofxData => {
-                        console.log('✅ OFX parseado com sucesso:', ofxData);
-                        
-                        // Extrair transações do OFX
-                        const transactions = extractTransactionsFromOFX(ofxData, selectedBank);
-                        
-                        if (transactions.length === 0) {
-                            ocultarIndicadorCarregamento();
-                            alert('⚠️ Nenhuma transação encontrada no arquivo OFX!');
-                            return;
-                        }
+                // Usar parser manual como método principal
+                const transactions = parseOFXManual(ofxContent, selectedBank);
+                
+                if (transactions.length > 0) {
+                    console.log(`✅ OFX parseado com sucesso: ${transactions.length} transações encontradas`);
                     
                     // Armazenar transações para preview
                     ofxTransactionsPreview = transactions;
@@ -6159,53 +6148,14 @@
                     showOFXPreview(transactions);
                     
                     ocultarIndicadorCarregamento();
-                    
-                }).catch(error => {
-                    console.error('❌ Erro no parse OFX:', error);
-                    ocultarIndicadorCarregamento();
-                    
-                    // Tentar parse manual para OFX mais antigos
-                    try {
-                        console.log('🔄 Tentando parse manual...');
-                        const transactions = parseOFXManual(ofxContent, selectedBank);
-                        
-                        if (transactions.length > 0) {
-                            ofxTransactionsPreview = transactions;
-                            showOFXPreview(transactions);
-                        } else {
-                            throw new Error('Nenhuma transação encontrada');
-                        }
-                    } catch (manualError) {
-                        console.error('❌ Erro no parse manual:', manualError);
-                        alert(`❌ Erro ao processar arquivo OFX!\n\nO arquivo pode estar corrompido ou em formato não suportado.\n\nDetalhes: ${error.message}`);
-                    }
-                });
-                
                 } else {
-                    // Biblioteca OFX não disponível, usar parse manual
-                    console.log('⚠️ Biblioteca ofx-js não disponível, usando parse manual...');
-                    
-                    try {
-                        const transactions = parseOFXManual(ofxContent, selectedBank);
-                        
-                        if (transactions.length > 0) {
-                            ofxTransactionsPreview = transactions;
-                            showOFXPreview(transactions);
-                            ocultarIndicadorCarregamento();
-                        } else {
-                            throw new Error('Nenhuma transação encontrada no arquivo OFX');
-                        }
-                    } catch (manualError) {
-                        console.error('❌ Erro no parse manual:', manualError);
-                        ocultarIndicadorCarregamento();
-                        alert(`❌ Erro ao processar arquivo OFX!\n\nO arquivo pode estar corrompido ou em formato não suportado.\n\nDetalhes: ${manualError.message}`);
-                    }
+                    throw new Error('Nenhuma transação encontrada no arquivo OFX');
                 }
                 
             } catch (error) {
+                console.error('❌ Erro no parse OFX:', error);
                 ocultarIndicadorCarregamento();
-                console.error('❌ Erro geral no parse OFX:', error);
-                alert(`❌ Erro ao processar arquivo OFX!\n\nDetalhes: ${error.message}`);
+                alert(`❌ Erro ao processar arquivo OFX!\n\nO arquivo pode estar corrompido ou em formato não suportado.\n\nDetalhes: ${error.message}`);
             }
         }
         
@@ -11662,18 +11612,11 @@
         // 🔧 MODO DESENVOLVIMENTO - DevTools liberado para debugging
         
         // ========================================
-        // 📚 VERIFICAÇÃO DA BIBLIOTECA OFX
+        // 📚 PARSER OFX INTERNO
         
-        // Verificar se a biblioteca OFX foi carregada corretamente
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                if (typeof OFX !== 'undefined' && OFX.parse) {
-                    console.log('✅ Biblioteca ofx-js carregada com sucesso');
-                } else {
-                    console.warn('⚠️ Biblioteca ofx-js não disponível - usando parser manual como fallback');
-                }
-            }, 1000);
-        });
+        // A aplicação agora usa exclusivamente o parser OFX interno
+        // para evitar problemas de CSP (Content Security Policy)
+        console.log('✅ Parser OFX interno configurado e pronto para uso');
 
     </script>
 </body>
