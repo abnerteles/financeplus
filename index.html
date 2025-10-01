@@ -6118,17 +6118,38 @@
                 const bancoSelecionado = bancos.find(banco => banco.nome === selectedBank);
                 
                 if (bancoSelecionado && bancoSelecionado.contas) {
+                    let contasCorrigidas = false;
+                    
                     bancoSelecionado.contas.forEach(conta => {
                         const option = document.createElement('option');
                         option.value = conta.id;
                         
                         // Criar descrição da conta com número como principal
-                        const numeroConta = conta.numero || 'S/N';
+                        let numeroConta = conta.numero;
+                        
+                        // Se não tem número, tentar usar agência ou gerar um baseado no ID
+                        if (!numeroConta || numeroConta === 'S/N' || numeroConta === '') {
+                            if (conta.agencia) {
+                                numeroConta = conta.agencia;
+                            } else {
+                                // Gerar número baseado no ID da conta
+                                numeroConta = `${String(conta.id).slice(-4)}-${Math.floor(Math.random() * 10)}`;
+                            }
+                            // Atualizar a conta com o novo número
+                            conta.numero = numeroConta;
+                            contasCorrigidas = true;
+                        }
+                        
                         const tipoConta = conta.tipo || 'Conta Corrente';
                         option.textContent = `${numeroConta} (${tipoConta})`;
                         
                         accountSelect.appendChild(option);
                     });
+                    
+                    // Salvar dados se alguma conta foi corrigida
+                    if (contasCorrigidas) {
+                        salvarDados();
+                    }
                 }
                 
                 accountSelect.disabled = false;
@@ -10585,6 +10606,9 @@
                                 numero: `${banco.id}${String(index + 1).padStart(3, '0')}-${Math.floor(Math.random() * 10)}`,
                                 tipo: conta
                             };
+                            precisaMigrar = true;
+                        } else if (conta && !conta.numero) {
+                            conta.numero = `${banco.id}${String(index + 1).padStart(3, '0')}-${Math.floor(Math.random() * 10)}`;
                             precisaMigrar = true;
                         }
                     });
