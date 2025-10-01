@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://unpkg.com/ofx-js@1.0.2/dist/ofx.min.js"></script>
+    <script src="https://unpkg.com/ofx-js@latest/dist/ofx.min.js" onerror="console.warn('⚠️ Falha ao carregar biblioteca ofx-js')"></script>
     
 
     
@@ -6073,7 +6073,11 @@
                 bancos.forEach(banco => {
                     const option = document.createElement('option');
                     option.value = banco.nome;
-                    option.textContent = `${banco.nome} - ${banco.tipo}`;
+                    // Melhorar a exibição das informações do banco
+                    const tipoConta = banco.tipo || 'Conta Corrente';
+                    const numeroConta = banco.numero || banco.agencia || '';
+                    const infoAdicional = numeroConta ? ` (${numeroConta})` : ` - ${tipoConta}`;
+                    option.textContent = `${banco.nome}${infoAdicional}`;
                     bankSelect.appendChild(option);
                 });
                 
@@ -6129,25 +6133,24 @@
         // Função para fazer parse do conteúdo OFX
         function parseOFXContent(ofxContent, selectedBank) {
             try {
-                // Verificar se a biblioteca OFX está disponível
-                if (typeof OFX === 'undefined') {
-                    throw new Error('Biblioteca OFX não carregada. Verifique a conexão com a internet.');
-                }
-                
                 console.log('🔄 Iniciando parse do OFX...');
                 
-                // Parse do OFX usando a biblioteca
-                OFX.parse(ofxContent).then(ofxData => {
-                    console.log('✅ OFX parseado com sucesso:', ofxData);
+                // Verificar se a biblioteca OFX está disponível
+                if (typeof OFX !== 'undefined' && OFX.parse) {
+                    console.log('📚 Usando biblioteca ofx-js para parse...');
                     
-                    // Extrair transações do OFX
-                    const transactions = extractTransactionsFromOFX(ofxData, selectedBank);
-                    
-                    if (transactions.length === 0) {
-                        ocultarIndicadorCarregamento();
-                        alert('⚠️ Nenhuma transação encontrada no arquivo OFX!');
-                        return;
-                    }
+                    // Parse do OFX usando a biblioteca
+                    OFX.parse(ofxContent).then(ofxData => {
+                        console.log('✅ OFX parseado com sucesso:', ofxData);
+                        
+                        // Extrair transações do OFX
+                        const transactions = extractTransactionsFromOFX(ofxData, selectedBank);
+                        
+                        if (transactions.length === 0) {
+                            ocultarIndicadorCarregamento();
+                            alert('⚠️ Nenhuma transação encontrada no arquivo OFX!');
+                            return;
+                        }
                     
                     // Armazenar transações para preview
                     ofxTransactionsPreview = transactions;
@@ -6177,6 +6180,27 @@
                         alert(`❌ Erro ao processar arquivo OFX!\n\nO arquivo pode estar corrompido ou em formato não suportado.\n\nDetalhes: ${error.message}`);
                     }
                 });
+                
+                } else {
+                    // Biblioteca OFX não disponível, usar parse manual
+                    console.log('⚠️ Biblioteca ofx-js não disponível, usando parse manual...');
+                    
+                    try {
+                        const transactions = parseOFXManual(ofxContent, selectedBank);
+                        
+                        if (transactions.length > 0) {
+                            ofxTransactionsPreview = transactions;
+                            showOFXPreview(transactions);
+                            ocultarIndicadorCarregamento();
+                        } else {
+                            throw new Error('Nenhuma transação encontrada no arquivo OFX');
+                        }
+                    } catch (manualError) {
+                        console.error('❌ Erro no parse manual:', manualError);
+                        ocultarIndicadorCarregamento();
+                        alert(`❌ Erro ao processar arquivo OFX!\n\nO arquivo pode estar corrompido ou em formato não suportado.\n\nDetalhes: ${manualError.message}`);
+                    }
+                }
                 
             } catch (error) {
                 ocultarIndicadorCarregamento();
@@ -11636,6 +11660,20 @@
 
         // ========================================
         // 🔧 MODO DESENVOLVIMENTO - DevTools liberado para debugging
+        
+        // ========================================
+        // 📚 VERIFICAÇÃO DA BIBLIOTECA OFX
+        
+        // Verificar se a biblioteca OFX foi carregada corretamente
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                if (typeof OFX !== 'undefined' && OFX.parse) {
+                    console.log('✅ Biblioteca ofx-js carregada com sucesso');
+                } else {
+                    console.warn('⚠️ Biblioteca ofx-js não disponível - usando parser manual como fallback');
+                }
+            }, 1000);
+        });
 
     </script>
 </body>
