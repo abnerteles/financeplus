@@ -6344,8 +6344,8 @@
                     data: dataFormatada,
                     descricao: memo.trim(),
                     categoria: categoria,
-                    banco: bancoSelecionado ? bancoSelecionado.nome : selectedBankName,
-                    conta: numeroConta,
+                    banco: bancoId || selectedAccountId, // ID do banco (não nome) para cálculos de saldo
+                    conta: selectedAccountId, // ID da conta para cálculos de saldo
                     tipo: tipo,
                     tipoTransacao: tipo === 'entrada' ? 'receita' : 'despesa',
                     cartao: '',
@@ -6354,7 +6354,9 @@
                     status: 'confirmado',
                     ofxId: fitid, // ID único do OFX para evitar duplicatas
                     importadoOFX: true, // Flag para identificar transações importadas
-                    bancoId: bancoId || selectedAccountId, // ID do banco para cálculos de saldo
+                    bancoId: bancoId || selectedAccountId, // ID do banco para referência
+                    bancoNome: bancoSelecionado ? bancoSelecionado.nome : selectedBankName, // Nome do banco para exibição
+                    numeroConta: numeroConta, // Número da conta para exibição
                     tipoTransacaoOFX: tipoTransacaoDetectado, // Tipo detectado do OFX (PIX, cartão, etc.)
                     trnTypeOFX: trntype // Tipo original do OFX
                 };
