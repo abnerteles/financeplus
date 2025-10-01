@@ -6114,20 +6114,22 @@
             processBtn.disabled = true;
             
             if (selectedBank) {
-                // Filtrar contas do banco selecionado
-                const contasDoBanco = bancos.filter(banco => banco.nome === selectedBank);
+                // Encontrar o banco selecionado
+                const bancoSelecionado = bancos.find(banco => banco.nome === selectedBank);
                 
-                contasDoBanco.forEach(conta => {
-                    const option = document.createElement('option');
-                    option.value = conta.id;
-                    
-                    // Criar descrição da conta com número como principal
-                    const numeroConta = conta.numero || conta.agencia || 'S/N';
-                    const tipoConta = conta.tipo || 'Conta Corrente';
-                    option.textContent = `${numeroConta} (${tipoConta})`;
-                    
-                    accountSelect.appendChild(option);
-                });
+                if (bancoSelecionado && bancoSelecionado.contas) {
+                    bancoSelecionado.contas.forEach(conta => {
+                        const option = document.createElement('option');
+                        option.value = conta.id;
+                        
+                        // Criar descrição da conta com número como principal
+                        const numeroConta = conta.numero || 'S/N';
+                        const tipoConta = conta.tipo || 'Conta Corrente';
+                        option.textContent = `${numeroConta} (${tipoConta})`;
+                        
+                        accountSelect.appendChild(option);
+                    });
+                }
                 
                 accountSelect.disabled = false;
             }
@@ -6286,8 +6288,20 @@
                 const valor = Math.abs(trnamt);
                 
                 // Buscar informações da conta selecionada
-                const contaSelecionada = bancos.find(banco => banco.id === selectedAccountId);
-                const numeroConta = contaSelecionada ? (contaSelecionada.numero || 'S/N') : 'S/N';
+                let contaSelecionada = null;
+                let numeroConta = 'S/N';
+                
+                // Procurar a conta pelo ID em todos os bancos
+                for (const banco of bancos) {
+                    if (banco.contas) {
+                        const conta = banco.contas.find(c => c.id == selectedAccountId);
+                        if (conta) {
+                            contaSelecionada = conta;
+                            numeroConta = conta.numero || 'S/N';
+                            break;
+                        }
+                    }
+                }
                 
                 // Categorização automática baseada no tipo
                 let categoria;
