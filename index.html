@@ -14,6 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/ofx-js@1.0.2/dist/ofx.min.js"></script>
     
 
     
@@ -1759,6 +1760,90 @@
                     </div>
 
                     <div class="config-item">
+                        <h5>🏦 Importação OFX</h5>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Importe extratos bancários!</strong> Carregue arquivos OFX do seu banco para importar transações automaticamente.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="text-center mb-3">
+                                            <i class="bi bi-file-earmark-arrow-up display-4 text-info mb-3"></i>
+                                            <h6 class="card-title">Importar Arquivo OFX</h6>
+                                            <p class="card-text small">Selecione um arquivo OFX do seu banco para importar transações</p>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="ofx-file-input" class="form-label">Arquivo OFX</label>
+                                            <input type="file" class="form-control" id="ofx-file-input" accept=".ofx,.qfx" />
+                                            <div class="form-text">Formatos aceitos: .ofx, .qfx</div>
+                                        </div>
+                                        
+                                        <div class="mb-3" id="ofx-bank-selection" style="display: none;">
+                                            <label for="ofx-bank-select" class="form-label">Banco/Conta</label>
+                                            <select class="form-select" id="ofx-bank-select">
+                                                <option value="">Selecione o banco/conta</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-info btn-lg" id="process-ofx-btn" disabled>
+                                                <i class="bi bi-gear me-2"></i>Processar Arquivo OFX
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview das transações -->
+                        <div id="ofx-preview-section" style="display: none;">
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-eye me-2"></i>Preview das Transações
+                                        <span class="badge bg-primary ms-2" id="ofx-transaction-count">0</span>
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                        <table class="table table-sm">
+                                            <thead class="table-light sticky-top">
+                                                <tr>
+                                                    <th>Data</th>
+                                                    <th>Descrição</th>
+                                                    <th>Valor</th>
+                                                    <th>Tipo</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="ofx-preview-tbody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <button class="btn btn-outline-secondary" id="cancel-ofx-import">
+                                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                                        </button>
+                                        <button class="btn btn-success" id="confirm-ofx-import">
+                                            <i class="bi bi-check-circle me-1"></i>Confirmar Importação
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <strong>Dica:</strong> Faça backup antes de importar. As transações duplicadas serão automaticamente detectadas e ignoradas.
+                        </div>
+                    </div>
+
+                    <div class="config-item">
                         <h5>🔄 Migração de Dados (Avançado)</h5>
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-1"></i>
@@ -2903,6 +2988,12 @@
                     e.target.value = ''; // Limpar input para permitir selecionar o mesmo arquivo novamente
                 }
             });
+            
+            // Event listeners para importação OFX
+            document.getElementById('ofx-file-input').addEventListener('change', handleOFXFileSelection);
+            document.getElementById('process-ofx-btn').addEventListener('click', processOFXFile);
+            document.getElementById('cancel-ofx-import').addEventListener('click', cancelOFXImport);
+            document.getElementById('confirm-ofx-import').addEventListener('click', confirmOFXImport);
             
             document.getElementById('migrar-dados').addEventListener('click', migrarDadosHTML);
             document.getElementById('verificar-dados').addEventListener('click', verificarDadosDisponiveis);
@@ -5959,6 +6050,453 @@
             reader.readAsText(arquivo);
         }
 
+        // ===== FUNÇÕES DE IMPORTAÇÃO OFX =====
+        
+        let ofxTransactionsPreview = []; // Array para armazenar transações do preview
+        
+        // Função para lidar com seleção de arquivo OFX
+        function handleOFXFileSelection(event) {
+            const file = event.target.files[0];
+            const processBtn = document.getElementById('process-ofx-btn');
+            const bankSelection = document.getElementById('ofx-bank-selection');
+            const bankSelect = document.getElementById('ofx-bank-select');
+            
+            if (file) {
+                // Habilitar botão de processar
+                processBtn.disabled = false;
+                
+                // Mostrar seleção de banco e popular com bancos existentes
+                bankSelection.style.display = 'block';
+                
+                // Limpar e popular select de bancos
+                bankSelect.innerHTML = '<option value="">Selecione o banco/conta</option>';
+                bancos.forEach(banco => {
+                    const option = document.createElement('option');
+                    option.value = banco.nome;
+                    option.textContent = `${banco.nome} - ${banco.tipo}`;
+                    bankSelect.appendChild(option);
+                });
+                
+                console.log('📁 Arquivo OFX selecionado:', file.name);
+            } else {
+                processBtn.disabled = true;
+                bankSelection.style.display = 'none';
+            }
+        }
+        
+        // Função para processar arquivo OFX
+        function processOFXFile() {
+            const fileInput = document.getElementById('ofx-file-input');
+            const bankSelect = document.getElementById('ofx-bank-select');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('❌ Selecione um arquivo OFX primeiro!');
+                return;
+            }
+            
+            if (!bankSelect.value) {
+                alert('❌ Selecione o banco/conta para as transações!');
+                return;
+            }
+            
+            mostrarIndicadorCarregamento('Processando arquivo OFX...');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const ofxContent = e.target.result;
+                    console.log('📄 Conteúdo OFX carregado, tamanho:', ofxContent.length);
+                    
+                    // Processar OFX usando a biblioteca ofx-js
+                    parseOFXContent(ofxContent, bankSelect.value);
+                    
+                } catch (error) {
+                    ocultarIndicadorCarregamento();
+                    console.error('❌ Erro ao processar OFX:', error);
+                    alert(`❌ Erro ao processar arquivo OFX!\n\nDetalhes: ${error.message}`);
+                }
+            };
+            
+            reader.onerror = function() {
+                ocultarIndicadorCarregamento();
+                alert('❌ Erro ao ler o arquivo OFX!');
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // Função para fazer parse do conteúdo OFX
+        function parseOFXContent(ofxContent, selectedBank) {
+            try {
+                // Verificar se a biblioteca OFX está disponível
+                if (typeof OFX === 'undefined') {
+                    throw new Error('Biblioteca OFX não carregada. Verifique a conexão com a internet.');
+                }
+                
+                console.log('🔄 Iniciando parse do OFX...');
+                
+                // Parse do OFX usando a biblioteca
+                OFX.parse(ofxContent).then(ofxData => {
+                    console.log('✅ OFX parseado com sucesso:', ofxData);
+                    
+                    // Extrair transações do OFX
+                    const transactions = extractTransactionsFromOFX(ofxData, selectedBank);
+                    
+                    if (transactions.length === 0) {
+                        ocultarIndicadorCarregamento();
+                        alert('⚠️ Nenhuma transação encontrada no arquivo OFX!');
+                        return;
+                    }
+                    
+                    // Armazenar transações para preview
+                    ofxTransactionsPreview = transactions;
+                    
+                    // Mostrar preview
+                    showOFXPreview(transactions);
+                    
+                    ocultarIndicadorCarregamento();
+                    
+                }).catch(error => {
+                    console.error('❌ Erro no parse OFX:', error);
+                    ocultarIndicadorCarregamento();
+                    
+                    // Tentar parse manual para OFX mais antigos
+                    try {
+                        console.log('🔄 Tentando parse manual...');
+                        const transactions = parseOFXManual(ofxContent, selectedBank);
+                        
+                        if (transactions.length > 0) {
+                            ofxTransactionsPreview = transactions;
+                            showOFXPreview(transactions);
+                        } else {
+                            throw new Error('Nenhuma transação encontrada');
+                        }
+                    } catch (manualError) {
+                        console.error('❌ Erro no parse manual:', manualError);
+                        alert(`❌ Erro ao processar arquivo OFX!\n\nO arquivo pode estar corrompido ou em formato não suportado.\n\nDetalhes: ${error.message}`);
+                    }
+                });
+                
+            } catch (error) {
+                ocultarIndicadorCarregamento();
+                console.error('❌ Erro geral no parse OFX:', error);
+                alert(`❌ Erro ao processar arquivo OFX!\n\nDetalhes: ${error.message}`);
+            }
+        }
+        
+        // Função para extrair transações do objeto OFX parseado
+        function extractTransactionsFromOFX(ofxData, selectedBank) {
+            const transactions = [];
+            
+            try {
+                // Navegar pela estrutura OFX para encontrar transações
+                let bankStatements = [];
+                
+                // Tentar diferentes estruturas OFX
+                if (ofxData.OFX && ofxData.OFX.BANKMSGSRSV1 && ofxData.OFX.BANKMSGSRSV1.STMTTRNRS) {
+                    const stmtTrnRs = ofxData.OFX.BANKMSGSRSV1.STMTTRNRS;
+                    if (stmtTrnRs.STMTRS && stmtTrnRs.STMTRS.BANKTRANLIST) {
+                        bankStatements = stmtTrnRs.STMTRS.BANKTRANLIST.STMTTRN || [];
+                    }
+                } else if (ofxData.BANKMSGSRSV1) {
+                    // Estrutura alternativa
+                    const stmtTrnRs = ofxData.BANKMSGSRSV1.STMTTRNRS;
+                    if (stmtTrnRs && stmtTrnRs.STMTRS && stmtTrnRs.STMTRS.BANKTRANLIST) {
+                        bankStatements = stmtTrnRs.STMTRS.BANKTRANLIST.STMTTRN || [];
+                    }
+                }
+                
+                console.log('📊 Transações encontradas no OFX:', bankStatements.length);
+                
+                // Converter cada transação OFX para formato da aplicação
+                bankStatements.forEach((stmt, index) => {
+                    try {
+                        const transaction = mapOFXTransactionToApp(stmt, selectedBank, index);
+                        if (transaction) {
+                            transactions.push(transaction);
+                        }
+                    } catch (error) {
+                        console.warn(`⚠️ Erro ao processar transação ${index}:`, error);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('❌ Erro ao extrair transações:', error);
+            }
+            
+            return transactions;
+        }
+        
+        // Função para mapear transação OFX para formato da aplicação
+        function mapOFXTransactionToApp(ofxTransaction, selectedBank, index) {
+            try {
+                // Extrair dados da transação OFX
+                const dtposted = ofxTransaction.DTPOSTED || '';
+                const trnamt = parseFloat(ofxTransaction.TRNAMT || 0);
+                const memo = ofxTransaction.MEMO || ofxTransaction.NAME || `Transação ${index + 1}`;
+                const fitid = ofxTransaction.FITID || `OFX_${Date.now()}_${index}`;
+                
+                // Converter data OFX (YYYYMMDD) para formato da aplicação
+                let dataFormatada = '';
+                if (dtposted) {
+                    const year = dtposted.substring(0, 4);
+                    const month = dtposted.substring(4, 6);
+                    const day = dtposted.substring(6, 8);
+                    dataFormatada = `${year}-${month}-${day}`;
+                }
+                
+                // Determinar tipo da transação (entrada ou saída)
+                const tipo = trnamt >= 0 ? 'entrada' : 'saida';
+                const valor = Math.abs(trnamt);
+                
+                // Mapear categoria baseada na descrição
+                const categoria = mapearCategoriaAutomatica(memo);
+                
+                return {
+                    id: nextId++,
+                    data: dataFormatada,
+                    descricao: memo.trim(),
+                    categoria: categoria,
+                    banco: selectedBank,
+                    conta: 'Conta Corrente', // Padrão
+                    tipo: tipo,
+                    tipoTransacao: tipo === 'entrada' ? 'receita' : 'despesa',
+                    cartao: '',
+                    contaDestino: '',
+                    valor: valor,
+                    status: 'confirmado',
+                    ofxId: fitid, // ID único do OFX para evitar duplicatas
+                    importadoOFX: true // Flag para identificar transações importadas
+                };
+                
+            } catch (error) {
+                console.error('❌ Erro ao mapear transação OFX:', error);
+                return null;
+            }
+        }
+        
+        // Função para mapear categoria automaticamente baseada na descrição
+        function mapearCategoriaAutomatica(descricao) {
+            const desc = descricao.toLowerCase();
+            
+            // Mapeamentos comuns
+            const mapeamentos = {
+                'supermercado|mercado|extra|carrefour|pao de acucar': 'Alimentação',
+                'posto|combustivel|gasolina|etanol|shell|petrobras': 'Transporte',
+                'farmacia|drogaria|medicamento': 'Saúde',
+                'restaurante|lanchonete|ifood|uber eats': 'Alimentação',
+                'cinema|teatro|show|entretenimento': 'Lazer',
+                'salario|ordenado|vencimento': 'Salário',
+                'pix|transferencia|ted|doc': 'Transferência',
+                'cartao|credito|debito': 'Cartão',
+                'conta|energia|agua|gas|telefone|internet': 'Contas',
+                'aluguel|financiamento|prestacao': 'Moradia'
+            };
+            
+            for (const [palavras, categoria] of Object.entries(mapeamentos)) {
+                const regex = new RegExp(palavras, 'i');
+                if (regex.test(desc)) {
+                    return categoria;
+                }
+            }
+            
+            return 'Outros'; // Categoria padrão
+        }
+        
+        // Função para parse manual de OFX (fallback)
+        function parseOFXManual(ofxContent, selectedBank) {
+            const transactions = [];
+            
+            try {
+                console.log('🔧 Iniciando parse manual do OFX...');
+                
+                // Dividir em linhas e procurar por transações
+                const lines = ofxContent.split('\n');
+                let currentTransaction = {};
+                let inTransaction = false;
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    
+                    if (line.includes('<STMTTRN>')) {
+                        inTransaction = true;
+                        currentTransaction = {};
+                    } else if (line.includes('</STMTTRN>')) {
+                        if (inTransaction && Object.keys(currentTransaction).length > 0) {
+                            const mappedTransaction = mapOFXTransactionToApp(currentTransaction, selectedBank, transactions.length);
+                            if (mappedTransaction) {
+                                transactions.push(mappedTransaction);
+                            }
+                        }
+                        inTransaction = false;
+                        currentTransaction = {};
+                    } else if (inTransaction) {
+                        // Extrair campos da transação
+                        if (line.includes('<DTPOSTED>')) {
+                            currentTransaction.DTPOSTED = line.replace(/<\/?DTPOSTED>/g, '');
+                        } else if (line.includes('<TRNAMT>')) {
+                            currentTransaction.TRNAMT = line.replace(/<\/?TRNAMT>/g, '');
+                        } else if (line.includes('<MEMO>')) {
+                            currentTransaction.MEMO = line.replace(/<\/?MEMO>/g, '');
+                        } else if (line.includes('<NAME>')) {
+                            currentTransaction.NAME = line.replace(/<\/?NAME>/g, '');
+                        } else if (line.includes('<FITID>')) {
+                            currentTransaction.FITID = line.replace(/<\/?FITID>/g, '');
+                        }
+                    }
+                }
+                
+                console.log(`✅ Parse manual concluído: ${transactions.length} transações encontradas`);
+                
+            } catch (error) {
+                console.error('❌ Erro no parse manual:', error);
+            }
+            
+            return transactions;
+        }
+        
+        // Função para mostrar preview das transações
+        function showOFXPreview(transactions) {
+            const previewSection = document.getElementById('ofx-preview-section');
+            const transactionCount = document.getElementById('ofx-transaction-count');
+            const previewTbody = document.getElementById('ofx-preview-tbody');
+            
+            // Atualizar contador
+            transactionCount.textContent = transactions.length;
+            
+            // Limpar tabela
+            previewTbody.innerHTML = '';
+            
+            // Adicionar transações à tabela
+            transactions.forEach((transaction, index) => {
+                const row = document.createElement('tr');
+                
+                // Verificar se é duplicata
+                const isDuplicate = checkDuplicateTransaction(transaction);
+                if (isDuplicate) {
+                    row.classList.add('table-warning');
+                }
+                
+                row.innerHTML = `
+                    <td>${new Date(transaction.data).toLocaleDateString('pt-BR')}</td>
+                    <td>${transaction.descricao}</td>
+                    <td class="${transaction.tipo === 'entrada' ? 'text-success' : 'text-danger'}">
+                        ${transaction.tipo === 'entrada' ? '+' : '-'} R$ ${transaction.valor.toFixed(2)}
+                    </td>
+                    <td>
+                        <span class="badge bg-${transaction.tipo === 'entrada' ? 'success' : 'danger'}">
+                            ${transaction.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                        </span>
+                    </td>
+                    <td>
+                        ${isDuplicate ? '<span class="badge bg-warning">Duplicata</span>' : '<span class="badge bg-success">Nova</span>'}
+                    </td>
+                `;
+                
+                previewTbody.appendChild(row);
+            });
+            
+            // Mostrar seção de preview
+            previewSection.style.display = 'block';
+            
+            // Scroll para o preview
+            previewSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Função para verificar transações duplicadas
+        function checkDuplicateTransaction(newTransaction) {
+            return lancamentos.some(existing => {
+                // Verificar por ID OFX se disponível
+                if (newTransaction.ofxId && existing.ofxId) {
+                    return existing.ofxId === newTransaction.ofxId;
+                }
+                
+                // Verificar por data, valor e descrição similar
+                const sameDate = existing.data === newTransaction.data;
+                const sameValue = Math.abs(existing.valor - newTransaction.valor) < 0.01;
+                const similarDescription = existing.descricao.toLowerCase().includes(newTransaction.descricao.toLowerCase().substring(0, 10));
+                
+                return sameDate && sameValue && similarDescription;
+            });
+        }
+        
+        // Função para cancelar importação OFX
+        function cancelOFXImport() {
+            const previewSection = document.getElementById('ofx-preview-section');
+            const fileInput = document.getElementById('ofx-file-input');
+            const processBtn = document.getElementById('process-ofx-btn');
+            const bankSelection = document.getElementById('ofx-bank-selection');
+            
+            // Limpar dados
+            ofxTransactionsPreview = [];
+            
+            // Ocultar preview
+            previewSection.style.display = 'none';
+            
+            // Reset do formulário
+            fileInput.value = '';
+            processBtn.disabled = true;
+            bankSelection.style.display = 'none';
+            
+            console.log('❌ Importação OFX cancelada');
+        }
+        
+        // Função para confirmar importação OFX
+        function confirmOFXImport() {
+            if (ofxTransactionsPreview.length === 0) {
+                alert('❌ Nenhuma transação para importar!');
+                return;
+            }
+            
+            // Filtrar apenas transações não duplicadas
+            const newTransactions = ofxTransactionsPreview.filter(transaction => !checkDuplicateTransaction(transaction));
+            
+            if (newTransactions.length === 0) {
+                alert('⚠️ Todas as transações já existem no sistema!\n\nNenhuma transação nova foi encontrada.');
+                return;
+            }
+            
+            const totalTransactions = ofxTransactionsPreview.length;
+            const duplicates = totalTransactions - newTransactions.length;
+            
+            const confirmMessage = `✅ Confirmar Importação?\n\n📊 Resumo:\n• Total de transações: ${totalTransactions}\n• Novas transações: ${newTransactions.length}\n• Duplicatas ignoradas: ${duplicates}\n\nDeseja continuar?`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            mostrarIndicadorCarregamento('Importando transações...');
+            
+            try {
+                // Adicionar transações ao sistema
+                newTransactions.forEach(transaction => {
+                    lancamentos.push(transaction);
+                });
+                
+                // Salvar dados
+                salvarDados();
+                
+                // Atualizar interface
+                carregarLancamentos();
+                atualizarDashboard();
+                
+                // Limpar preview
+                cancelOFXImport();
+                
+                ocultarIndicadorCarregamento();
+                
+                // Mostrar sucesso
+                alert(`✅ Importação concluída com sucesso!\n\n📊 Resultado:\n• ${newTransactions.length} transações importadas\n• ${duplicates} duplicatas ignoradas\n\nAs transações foram adicionadas ao seu sistema.`);
+                
+                console.log(`✅ Importação OFX concluída: ${newTransactions.length} transações adicionadas`);
+                
+            } catch (error) {
+                ocultarIndicadorCarregamento();
+                console.error('❌ Erro ao importar transações:', error);
+                alert(`❌ Erro ao importar transações!\n\nDetalhes: ${error.message}`);
+            }
+        }
 
         
         // Função de teste para verificar lançamentos mensais
